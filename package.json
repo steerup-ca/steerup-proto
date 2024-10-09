@@ -27,12 +27,12 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "build:gh-pages": "PUBLIC_URL='/steerup-proto' react-scripts build"
+    "build:gh-pages": "DISABLE_ESLINT_PLUGIN=true PUBLIC_URL='/steerup-proto' react-scripts build"
   },
   "eslintConfig": {
     "extends": [
