@@ -1,0 +1,57 @@
+.lead-investor-details-page {
+  /* Add any specific styles for the lead investor page container if needed */
+}
+
+.lead-investor-card {
+  /* Add any specific styles for the lead investor card if needed */
+}
+
+.lead-investor-image {
+  /* Adjust the image size if needed */
+  width: 120px;
+  height: 120px;
+}
+
+.lead-investor-title,
+.lead-investor-company {
+  font-style: italic;
+  margin-top: var(--spacing-small);
+}
+
+.lead-investor-bio {
+  font-size: var(--font-size-medium);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-large);
+}
+
+.credentials-section,
+.expertise-section,
+.investment-history-section {
+  margin-top: var(--spacing-large);
+}
+
+.investment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.investment-company {
+  font-weight: bold;
+}
+
+.investment-amount {
+  color: var(--primary-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .investment-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .investment-amount {
+    margin-top: var(--spacing-small);
+  }
+}

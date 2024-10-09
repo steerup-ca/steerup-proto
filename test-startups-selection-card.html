@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test StartupsSelectionCard</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/styled-components/dist/styled-components.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        const styled = styled.default;
+
+        const Card = styled.div`
+          background-color: #1e2329;
+          color: #ffffff;
+          border-radius: 10px;
+          padding: 20px;
+          max-width: 800px;
+          margin: 0 auto;
+        `;
+
+        const Title = styled.h2`
+          font-size: 24px;
+          margin-bottom: 20px;
+        `;
+
+        const SectionTitle = styled.h3`
+          color: #4caf50;
+          font-size: 14px;
+          text-transform: uppercase;
+          margin-top: 20px;
+          margin-bottom: 10px;
+        `;
+
+        const LeadInvestorSection = styled.div`
+          display: flex;
+          align-items: center;
+          margin-bottom: 20px;
+        `;
+
+        const LeadInvestorImage = styled.img`
+          width: 50px;
+          height: 50px;
+          border-radius: 25px;
+          margin-right: 10px;
+        `;
+
+        const LeadInvestorInfo = styled.div`
+          flex-grow: 1;
+        `;
+
+        const LeadInvestment = styled.div`
+          text-align: right;
+        `;
+
+        const StartupsList = styled.div`
+          margin-bottom: 20px;
+        `;
+
+        const StartupItem = styled.div`
+          display: flex;
+          align-items: center;
+          margin-bottom: 10px;
+        `;
+
+        const StartupImage = styled.img`
+          width: 40px;
+          height: 40px;
+          border-radius: 5px;
+          margin-right: 10px;
+        `;
+
+        const ProgressBar = styled.div`
+          background-color: #2c3137;
+          height: 10px;
+          border-radius: 5px;
+          margin-bottom: 10px;
+        `;
+
+        const Progress = styled.div`
+          background-color: #4caf50;
+          height: 100%;
+          border-radius: 5px;
+          width: ${props => props.width};
+        `;
+
+        const CampaignStats = styled.div`
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 5px;
+        `;
+
+        const CurrentAmount = styled.p`
+          color: #4caf50;
+          font-weight: bold;
+        `;
+
+        const CampaignInfo = styled.div`
+          font-size: 14px;
+          color: #a0a0a0;
+          margin-bottom: 20px;
+        `;
+
+        const ContributeButton = styled.button`
+          width: 100%;
+          background-color: #8e44ad;
+          color: white;
+          border: none;
+          padding: 10px;
+          font-size: 16px;
+          border-radius: 5px;
+          cursor: pointer;
+          margin-bottom: 20px;
+        `;
+
+        const AdditionalFunding = styled.div`
+          margin-top: 20px;
+        `;
+
+        const FundingItem = styled.div`
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 5px;
+        `;
+
+        const StartupsSelectionCard = ({ selection, leadInvestor, startups }) => {
+          const progressPercentage = (selection.currentAmount / selection.goal) * 100;
+
+          return (
+            <Card>
+              <Title>{selection.title}</Title>
+
+              <SectionTitle>SELECTION LEAD</SectionTitle>
+              <LeadInvestorSection>
+                {leadInvestor && (
+                  <>
+                    <LeadInvestorImage src={leadInvestor.imageUrl || ''} alt={leadInvestor.name || 'Lead Investor'} />
+                    <LeadInvestorInfo>
+                      <h3>{leadInvestor.name || 'Unknown Investor'}</h3>
+                      <p>{leadInvestor.title || 'No title'}</p>
+                    </LeadInvestorInfo>
+                  </>
+                )}
+                <LeadInvestment>
+                  <p>Lead Investment:</p>
+                  <p>${selection.currentAmount.toLocaleString()}</p>
+                </LeadInvestment>
+              </LeadInvestorSection>
+
+              <SectionTitle>STARTUPS</SectionTitle>
+              <StartupsList>
+                {startups.map((startup) => (
+                  <StartupItem key={startup.id}>
+                    <StartupImage src={startup.imageUrl || ''} alt={startup.name} />
+                    <div>
+                      <h4>{startup.name}</h4>
+                      <p>{startup.description}</p>
+                    </div>
+                  </StartupItem>
+                ))}
+              </StartupsList>
+
+              <ProgressBar>
+                <Progress width={`${progressPercentage}%`} />
+              </ProgressBar>
+              <CampaignStats>
+                <p>Goal: ${selection.goal.toLocaleString()}</p>
+                <CurrentAmount>${selection.currentAmount.toLocaleString()}</CurrentAmount>
+                <p>{progressPercentage.toFixed(0)}%</p>
+              </CampaignStats>
+              <CampaignInfo>
+                {selection.daysLeft} DAYS LEFT • {selection.backersCount} BACKERS
+              </CampaignInfo>
+
+              <ContributeButton>Contribute</ContributeButton>
+
+              <SectionTitle>ADDITIONAL FUNDING</SectionTitle>
+              <AdditionalFunding>
+                {selection.additionalFunding.map((funding, index) => (
+                  <FundingItem key={index}>
+                    <p>{funding.name}</p>
+                    <p>${funding.amount.toLocaleString()}</p>
+                  </FundingItem>
+                ))}
+              </AdditionalFunding>
+            </Card>
+          );
+        };
+
+        const sampleData = {
+            selection: {
+                id: '1',
+                title: 'Immersive Gaming Experience',
+                currentAmount: 20000,
+                goal: 100000,
+                daysLeft: 31,
+                backersCount: 1025,
+                additionalFunding: [
+                    { name: "Ministère de l'Économie et de l'Innovation", amount: 1000000 },
+                    { name: "McGill", amount: 150000 }
+                ]
+            },
+            leadInvestor: {
+                id: '1',
+                name: 'Emily Chen',
+                title: 'Neuroscientist, Former CTO of BrainTech Innovations',
+                imageUrl: 'https://example.com/emily-chen.jpg'
+            },
+            startups: [
+                { id: '1', name: 'VRcade', description: 'Creating next-gen VR arcade experiences for multiplayer gaming.', imageUrl: 'https://example.com/vrcade.jpg' },
+                { id: '2', name: 'EcoQuest', description: 'Developing educational games focused on environmental awareness.', imageUrl: 'https://example.com/ecoquest.jpg' },
+                { id: '3', name: 'NeuroPlay', description: 'Brain-computer interface games for improved cognitive function.', imageUrl: 'https://example.com/neuroplay.jpg' }
+            ]
+        };
+
+        function App() {
+            return (
+                <div>
+                    <StartupsSelectionCard
+                        selection={sampleData.selection}
+                        leadInvestor={sampleData.leadInvestor}
+                        startups={sampleData.startups}
+                    />
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

@@ -1,38 +1,370 @@
+@import './styles/theme.css';
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
 .App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Header styles */
+.header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  padding: var(--spacing-medium);
+  background-color: var(--card-bg-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logo h1 {
+  font-size: var(--font-size-large);
+  color: var(--primary-color);
+}
+
+/* Navbar styles */
+.navbar ul {
+  display: flex;
+  list-style-type: none;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar li {
+  margin-left: var(--spacing-medium);
+}
+
+.navbar a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: var(--font-size-small);
+  padding: var(--spacing-small) var(--spacing-medium);
+  border-radius: var(--border-radius);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.navbar a:hover {
+  background-color: var(--primary-color);
+  color: var(--button-text-color);
+}
+
+/* Main content styles */
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  align-items: center;
+  text-align: center;
+  padding: var(--spacing-large);
 }
 
-.App-link {
-  color: #61dafb;
+.main-content h1 {
+  font-size: var(--font-size-xlarge);
+  margin-bottom: var(--spacing-medium);
+  color: var(--primary-color);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.main-content p {
+  font-size: var(--font-size-medium);
+  margin-bottom: var(--spacing-large);
+  max-width: 600px;
+}
+
+/* Button styles */
+.btn {
+  padding: var(--spacing-small) var(--spacing-medium);
+  font-size: var(--font-size-medium);
+  font-weight: bold;
+  background-color: var(--primary-color);
+  color: var(--button-text-color);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.btn:hover {
+  background-color: var(--secondary-color);
+  color: var(--button-text-color);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Steerup Form styles */
+.steerup-form {
+  max-width: 600px;
+  width: 100%;
+  margin: var(--spacing-large) auto;
+  padding: var(--spacing-large);
+  background-color: var(--card-bg-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--secondary-color);
+}
+
+.form-title {
+  font-size: var(--font-size-large);
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-medium);
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: var(--spacing-medium);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-small);
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.form-input {
+  width: 100%;
+  padding: var(--spacing-small);
+  font-size: var(--font-size-medium);
+  border: 1px solid var(--secondary-color);
+  border-radius: var(--border-radius);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(107, 93, 180, 0.2);
+}
+
+.input-group {
+  display: flex;
+  margin-bottom: var(--spacing-small);
+}
+
+.input-group .form-input {
+  flex-grow: 1;
+  margin-right: var(--spacing-small);
+}
+
+.input-group .btn {
+  flex-shrink: 0;
+}
+
+.add-btn, .remove-btn {
+  padding: var(--spacing-small);
+  font-size: var(--font-size-small);
+}
+
+.add-btn {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  margin-top: var(--spacing-small);
+  width: 100%;
+  font-weight: normal;
+}
+
+.add-btn:hover {
+  background-color: var(--primary-color);
+  color: var(--button-text-color);
+}
+
+.remove-btn {
+  background-color: var(--secondary-color);
+  padding: var(--spacing-small);
+  color: var(--text-color);
+  min-width: 30px;
+}
+
+.remove-btn:hover {
+  background-color: var(--primary-color);
+  color: var(--button-text-color);
+}
+
+.submit-btn {
+  width: 100%;
+  padding: var(--spacing-medium);
+  font-size: var(--font-size-medium);
+  margin-top: var(--spacing-medium);
+  background-color: var(--primary-color);
+}
+
+.submit-btn:hover {
+  background-color: var(--secondary-color);
+}
+
+/* ExplorePage styles */
+.explore-page {
+  padding: var(--spacing-large);
+}
+
+.explore-page h1 {
+  font-size: var(--font-size-xlarge);
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-large);
+  text-align: center;
+}
+
+.startups-selections-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-large);
+}
+
+/* StartupsSelectionCard styles */
+.startups-selection-card {
+  background-color: var(--card-bg-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+}
+
+.selection-lead {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-medium);
+}
+
+.lead-investor-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: var(--spacing-small);
+}
+
+.lead-investor-info h3 {
+  margin: 0;
+  font-size: var(--font-size-medium);
+  color: var(--primary-color);
+}
+
+.lead-investor-info p {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--text-color-light);
+}
+
+.lead-investment {
+  margin-left: auto;
+  text-align: right;
+}
+
+.investment-amount {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.selection-title {
+  font-size: var(--font-size-large);
+  color: var(--text-color);
+  margin-bottom: var(--spacing-medium);
+}
+
+.startups-list {
+  margin-bottom: var(--spacing-medium);
+}
+
+.startup-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-small);
+}
+
+.startup-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: var(--spacing-small);
+}
+
+.startup-info h4 {
+  margin: 0;
+  font-size: var(--font-size-medium);
+}
+
+.startup-info p {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--text-color-light);
+}
+
+.campaign-progress {
+  margin-bottom: var(--spacing-medium);
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: var(--secondary-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background-color: var(--primary-color);
+}
+
+.campaign-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--spacing-small);
+}
+
+.current-amount {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.campaign-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-small);
+  color: var(--text-color-light);
+}
+
+.additional-funding h4 {
+  font-size: var(--font-size-medium);
+  margin-bottom: var(--spacing-small);
+}
+
+.funding-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-small);
+}
+
+.contribute-btn {
+  margin-top: var(--spacing-medium);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .steerup-form {
+    padding: var(--spacing-medium);
   }
-  to {
-    transform: rotate(360deg);
+
+  .form-title {
+    font-size: var(--font-size-large);
+  }
+
+  .form-input, .btn {
+    font-size: var(--font-size-small);
+  }
+
+  .startups-selections-list {
+    grid-template-columns: 1fr;
   }
 }
