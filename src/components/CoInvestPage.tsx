@@ -66,6 +66,23 @@ const CoInvestPage: React.FC = () => {
     fetchData();
   }, [id]);
 
+  const handleInvestmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '' || /^\d+$/.test(value)) {
+      setInvestmentAmount(value);
+    }
+  };
+
+  const handlePresetAmount = (amount: number) => {
+    setInvestmentAmount(amount.toString());
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log(`Investment of $${investmentAmount} submitted for selection ${id}`);
+    navigate('/');
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-background-color">
@@ -81,12 +98,6 @@ const CoInvestPage: React.FC = () => {
   if (!selection) {
     return <div className="text-center text-2xl mt-10 text-text-color">Selection not found</div>;
   }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log(`Investment of $${investmentAmount} submitted for selection ${id}`);
-    navigate('/');
-  };
 
   return (
     <div className="container mx-auto px-4 py-8 bg-background-color text-text-color">
@@ -105,14 +116,33 @@ const CoInvestPage: React.FC = () => {
                   Investment Amount ($)
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   id="investmentAmount"
                   value={investmentAmount}
-                  onChange={(e) => setInvestmentAmount(e.target.value)}
-                  className="w-full px-3 py-2 bg-detail-item-bg-color border border-secondary-color rounded-md focus:outline-none focus:ring-2 focus:ring-primary-color text-text-color"
+                  onChange={handleInvestmentChange}
+                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-color"
                   required
-                  min="1"
+                  pattern="\d*"
+                  inputMode="numeric"
+                  placeholder="Enter amount"
+                  style={{
+                    backgroundColor: '#ffffff',
+                    color: '#000000',
+                    border: '1px solid #4a5568',
+                  }}
                 />
+              </div>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {[500, 1000, 5000, 10000].map((amount) => (
+                  <button
+                    key={amount}
+                    type="button"
+                    onClick={() => handlePresetAmount(amount)}
+                    className="bg-secondary-color text-button-text-color py-1 px-3 rounded-full hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-opacity-50 transition duration-200"
+                  >
+                    ${amount.toLocaleString()}
+                  </button>
+                ))}
               </div>
               <button
                 type="submit"
