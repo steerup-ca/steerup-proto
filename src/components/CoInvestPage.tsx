@@ -101,93 +101,110 @@ const CoInvestPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 bg-background-color text-text-color">
-      <h1 className="text-4xl font-bold mb-6 text-center text-primary-color">{selection.title}</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center text-primary-color">{selection.title}</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Investment Form and Summary */}
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Left Column: Investment Form, Summary, and Additional Funding */}
+        <div className="space-y-8">
           {/* Investment Form */}
-          <form onSubmit={handleSubmit} className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden mb-8">
+          <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden">
             <div className="p-6">
               <h2 className="text-2xl font-semibold mb-4 text-primary-color">Make Your Investment</h2>
               <p className="mb-4">By co-investing, you'll receive equity proportional to your investment amount in these startups.</p>
-              <div className="mb-4">
-                <label htmlFor="investmentAmount" className="block text-sm font-medium mb-2">
-                  Investment Amount ($)
-                </label>
-                <input
-                  type="text"
-                  id="investmentAmount"
-                  value={investmentAmount}
-                  onChange={handleInvestmentChange}
-                  className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-color"
-                  required
-                  pattern="\d*"
-                  inputMode="numeric"
-                  placeholder="Enter amount"
+              <form onSubmit={handleSubmit}>
+                <div className="mb-4">
+                  <label htmlFor="investmentAmount" className="block text-sm font-medium mb-2">
+                    Investment Amount ($)
+                  </label>
+                  <input
+                    type="text"
+                    id="investmentAmount"
+                    value={investmentAmount}
+                    onChange={handleInvestmentChange}
+                    className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-color"
+                    required
+                    pattern="\d*"
+                    inputMode="numeric"
+                    placeholder="Enter amount"
+                    style={{
+                      backgroundColor: '#ffffff',
+                      color: '#000000',
+                      border: '1px solid #4a5568',
+                    }}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {[500, 1000, 5000, 10000].map((amount) => (
+                    <button
+                      key={amount}
+                      type="button"
+                      onClick={() => handlePresetAmount(amount)}
+                      className="bg-secondary-color text-button-text-color py-1 px-3 rounded-full hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-opacity-50 transition duration-200"
+                    >
+                      ${amount.toLocaleString()}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-primary-color text-button-text-color py-2 px-4 rounded-full hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-opacity-50 transition duration-200"
                   style={{
-                    backgroundColor: '#ffffff',
-                    color: '#000000',
-                    border: '1px solid #4a5568',
+                    backgroundColor: 'var(--primary-color)',
+                    color: 'var(--button-text-color)',
+                    borderRadius: 'var(--button-border-radius)',
                   }}
-                />
-              </div>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {[500, 1000, 5000, 10000].map((amount) => (
-                  <button
-                    key={amount}
-                    type="button"
-                    onClick={() => handlePresetAmount(amount)}
-                    className="bg-secondary-color text-button-text-color py-1 px-3 rounded-full hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-opacity-50 transition duration-200"
-                  >
-                    ${amount.toLocaleString()}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-primary-color text-button-text-color py-2 px-4 rounded-full hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-opacity-50 transition duration-200"
-                style={{
-                  backgroundColor: 'var(--primary-color)',
-                  color: 'var(--button-text-color)',
-                  borderRadius: 'var(--button-border-radius)',
-                }}
-              >
-                Confirm Co-investment
-              </button>
+                >
+                  Confirm Co-investment
+                </button>
+              </form>
             </div>
-          </form>
+          </div>
 
-          {/* Summary Section */}
-          <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden mb-8">
+          {/* Investment Summary */}
+          <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden">
             <div className="p-6">
               <h2 className="text-2xl font-semibold mb-4 text-primary-color">Investment Summary</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div className="bg-detail-item-bg-color p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-detail-item-bg-color p-4 rounded-lg text-center">
                   <h4 className="text-sm font-semibold mb-1">Total Raised</h4>
-                  <p className="text-xl font-bold">${selection.currentAmount.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-primary-color">${selection.currentAmount.toLocaleString()}</p>
                 </div>
-                <div className="bg-detail-item-bg-color p-4 rounded-lg">
+                <div className="bg-detail-item-bg-color p-4 rounded-lg text-center">
                   <h4 className="text-sm font-semibold mb-1">Backers</h4>
-                  <p className="text-xl font-bold">{selection.backersCount}</p>
+                  <p className="text-2xl font-bold text-primary-color">{selection.backersCount}</p>
                 </div>
-                <div className="bg-detail-item-bg-color p-4 rounded-lg">
+                <div className="bg-detail-item-bg-color p-4 rounded-lg text-center">
                   <h4 className="text-sm font-semibold mb-1">Days Left</h4>
-                  <p className="text-xl font-bold">{selection.daysLeft}</p>
+                  <p className="text-2xl font-bold text-primary-color">{selection.daysLeft}</p>
                 </div>
-                <div className="bg-detail-item-bg-color p-4 rounded-lg">
+                <div className="bg-detail-item-bg-color p-4 rounded-lg text-center">
                   <h4 className="text-sm font-semibold mb-1">Goal</h4>
-                  <p className="text-xl font-bold">${selection.goal.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-primary-color">${selection.goal.toLocaleString()}</p>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Additional Funding Section */}
+          <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden">
+            <div className="p-6">
+              <h2 className="text-2xl font-semibold mb-4 text-primary-color">Additional Funding</h2>
+              <ul className="space-y-2">
+                {selection.additionalFunding.map((funding, index) => (
+                  <li key={index} className="bg-detail-item-bg-color p-3 rounded-lg">
+                    <span className="font-semibold">{funding.name}</span>: {funding.description}
+                    <span className="block mt-1 text-primary-color font-bold">${funding.amount.toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
 
-        {/* Right Column: Startups and Additional Info */}
-        <div>
+        {/* Right Column: Startups and Selection Lead */}
+        <div className="space-y-8">
           {/* Startups Section */}
-          <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden mb-8">
+          <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden">
             <div className="p-6">
               <h2 className="text-2xl font-semibold mb-4 text-primary-color">Featured Startups</h2>
               <div className="space-y-4">
@@ -204,7 +221,7 @@ const CoInvestPage: React.FC = () => {
 
           {/* Selection Lead Section */}
           {selectionLead && (
-            <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden mb-8">
+            <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden">
               <div className="p-6">
                 <h2 className="text-2xl font-semibold mb-4 text-primary-color">Selection Lead</h2>
                 <div className="flex items-center mb-4">
@@ -218,20 +235,6 @@ const CoInvestPage: React.FC = () => {
               </div>
             </div>
           )}
-
-          {/* Additional Funding Section */}
-          <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden mb-8">
-            <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-4 text-primary-color">Additional Funding</h2>
-              <ul className="list-disc pl-5">
-                {selection.additionalFunding.map((funding, index) => (
-                  <li key={index} className="mb-2">
-                    <strong>{funding.name}</strong>: {funding.description} - ${funding.amount.toLocaleString()}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
         </div>
       </div>
 
