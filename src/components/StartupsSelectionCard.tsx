@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { StartupsSelection, LeadInvestor, Startup, Campaign } from '../types';
 
 interface StartupsSelectionCardProps {
@@ -31,26 +32,30 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
         {leadInvestor && (
           <div className="mb-4">
             <h3 className="text-sm font-semibold text-white mb-2">SELECTION LEAD</h3>
-            <div className="flex items-center">
-              <img src={leadInvestor.photo} alt={leadInvestor.name} className="w-12 h-12 rounded-full mr-4" />
-              <div>
-                <p className="text-white font-semibold">{leadInvestor.name}</p>
-                <p className="text-sm text-gray-400">{leadInvestor.bio}</p>
+            <Link to={`/lead-investor/${leadInvestor.id}`} className="block hover:bg-gray-700 rounded-lg transition duration-300">
+              <div className="flex items-center p-2">
+                <img src={leadInvestor.photo} alt={leadInvestor.name} className="w-12 h-12 rounded-full mr-4" />
+                <div>
+                  <p className="text-white font-semibold">{leadInvestor.name}</p>
+                  <p className="text-sm text-gray-400">{leadInvestor.bio}</p>
+                </div>
               </div>
-            </div>
+            </Link>
           </div>
         )}
 
         <div className="space-y-4 mb-4">
           {startups.map(startup => (
-            <div key={startup.id} className="relative h-32 rounded-lg overflow-hidden">
-              <img src={startup.imageUrl} alt={startup.name} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-2">
-                <h4 className="text-white font-semibold text-shadow">{startup.name}</h4>
-                <p className="text-sm text-gray-200 text-shadow">{startup.description}</p>
+            <Link key={startup.id} to={`/startup/${startup.id}`} className="block hover:opacity-90 transition duration-300">
+              <div className="relative h-32 rounded-lg overflow-hidden">
+                <img src={startup.imageUrl} alt={startup.name} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-2">
+                  <h4 className="text-white font-semibold text-shadow">{startup.name}</h4>
+                  <p className="text-sm text-gray-200 text-shadow">{startup.description}</p>
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
