@@ -1,127 +1,92 @@
-import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { StartupsSelection, LeadInvestor, Startup } from '../types';
-import Button from './Button';
-import './StartupsSelectionCard.css';
-
-// Fallback image as a data URI
-const fallbackImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAANASURBVHgB7d3NbhMxEAfwsRMqRA+99MIj8AYV4k3gDXgTHqG3qgfEA/AGPAE3qh54g/YGCMG1H7G7iZNs7Vk7djIz/59UVZUg8czueOyxEwIAAAAAAAAAAAAAAADAeGbqBGvtnaqqbur6Iq7X9f+/mJyKZ3POvVfnmJQh1BHXsixfxu2qrh/qEKbJxXNSSu+cc5+VEtWJjYgbY57Fx/xeV6OO8qEsy1eqk5AhMTMexg9/rWKGPLTW3nfOfdX/QTLkUYz6Cx3PrLX2eHV6hlAncZzQiZxzH6y1d/UxZMjpZEjOWRJzxDnnv8f9P+oQMuR0UoZQZqgOIUNOZ3KGkGTIYKr/ZchQZAgRMmQwMoQIGTIYGUKEDBmMDCFChgxGhhAhQwYjQ4iQIYORIUTIkMHIECJkyGBkCBEyZDAyhAgZMhgZQoQMGYwMIUKGDEaGEDmXDKGZITTTOJAhRMiQwcgQImTIYGQIETJkMDKECBkyGBlChAwZjAwhQoYMRoYQIUMGI0OIkCGDkSFEyJDByBAiZMhgZAgRMmQwMoQIGTIYGUKEDBmMDCFChgxGhhAhQwYjQ4iQIYORIUTIkMHIECJkyGBkCBEyZDAyhAgZMhgZQoQMGYwMIUKGDEaGECFDBiNDiJAhg5EhRMiQwcgQImTIYGQIETJkMDKECBkyGBlChAwZjAwhQoYMRoYQIUMGI0OIkCGDkSFEyJDByBAiZMhgZAgRMmQwMoQIGTIYGUKEDBmMDCFChgxGhhAhQwYjQ4iQIYORIUTIkMHIECJkyGBkCBEyZDAyhAgZMhgZQoQMGYwMIUKGDEaGECFDBiNDiJAhg5EhRMiQwcgQImTIYGQIETJkMDKECBkyGBlChAwZjAwhQoYMRoYQIUMGI0OIkCGDkSFEyJDByBAiZMhgZAiRc8mQVVVVT1QHrFarT865L/oIMoTIuWTI7+12+0h1wGaz+VhV1Xd9BBky3PNYz1VCxpgXRVF81UeQIcN5n/HaGPNUJRTH9Gq73T7Ux5AhA8Ux/Jq2qfcqsRj9D4qieKePIUOGe7Zer+/FjHmsEopj+lYcz2/1MQAAAAAAAAAAAAAAAACQ+QvS6KAf0XKnEwAAAABJRU5ErkJggg==';
+import React from 'react';
+import { StartupsSelection, LeadInvestor, Startup, Campaign } from '../types';
 
 interface StartupsSelectionCardProps {
   selection: StartupsSelection;
   leadInvestor?: LeadInvestor;
   startups: Startup[];
+  campaigns: Campaign[];
 }
 
-const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection, leadInvestor, startups }) => {
-  const progressPercentage = (selection.currentAmount / selection.goal) * 100;
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    console.log('StartupsSelectionCard rendered');
-    console.log('Lead Investor:', JSON.stringify(leadInvestor, null, 2));
-    console.log('Startups:', JSON.stringify(startups, null, 2));
-  }, [leadInvestor, startups]);
-
-  const getLeadInvestorImage = () => {
-    if (leadInvestor && leadInvestor.photo) {
-      console.log('Lead Investor Photo:', leadInvestor.photo);
-      return leadInvestor.photo;
-    }
-    console.log('Using fallback image for Lead Investor');
-    return fallbackImage;
-  };
-
-  const handleStartupClick = (startupId: string) => {
-    navigate(`/startup/${startupId}`);
-  };
-
-  const handleLeadInvestorClick = () => {
-    if (leadInvestor && leadInvestor.id) {
-      navigate(`/lead-investor/${leadInvestor.id}`);
-    }
-  };
+const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection, leadInvestor, startups, campaigns }) => {
+  const totalGoal = campaigns.reduce((sum, campaign) => sum + campaign.steerup_amount, 0);
+  const progressPercentage = (selection.currentAmount / totalGoal) * 100;
 
   return (
-    <div className="card">
-      <h2 className="title">{selection.title}</h2>
-
-      <div className="section">
-        <h3 className="section-title">SELECTION LEAD</h3>
-        <div className="lead-investor-section" onClick={handleLeadInvestorClick}>
-          {leadInvestor ? (
-            <>
-              <img 
-                className="lead-investor-image" 
-                src={getLeadInvestorImage()} 
-                alt={leadInvestor.name || 'Lead Investor'} 
-                style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%' }}
-                onError={(e) => {
-                  console.error('Error loading lead investor image:', e);
-                  e.currentTarget.src = fallbackImage;
-                }}
-              />
-              <div className="lead-investor-info">
-                <h4>{leadInvestor.name || 'Unknown Investor'}</h4>
-                <p>{leadInvestor.title || 'No title'}</p>
-              </div>
-            </>
-          ) : (
-            <p>No lead investor information available</p>
-          )}
-          <div className="lead-investment">
-            <p>Lead Investment:</p>
-            <p className="investment-amount">${selection.currentAmount.toLocaleString()}</p>
+    <div className="bg-gray-800 rounded-lg overflow-hidden">
+      <div className="p-4">
+        <div className="flex items-center mb-4">
+          <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mr-4">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">{selection.title}</h2>
+            <p className="text-sm text-gray-400">Immersive Gaming Experience</p>
           </div>
         </div>
-      </div>
 
-      <div className="section">
-        <h3 className="section-title">STARTUPS</h3>
-        <div className="startups-list">
-          {startups.map((startup) => (
-            <div 
-              key={startup.id} 
-              className="startup-item" 
-              onClick={() => handleStartupClick(startup.id)}
-            >
-              <div className="startup-banner" style={{ backgroundImage: `url(${startup.imageUrl || fallbackImage})` }}>
-                <div className="startup-info">
-                  <h4>{startup.name}</h4>
-                  <p>{startup.description}</p>
-                </div>
+        {leadInvestor && (
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-white mb-2">SELECTION LEAD</h3>
+            <div className="flex items-center">
+              <img src={leadInvestor.photo} alt={leadInvestor.name} className="w-12 h-12 rounded-full mr-4" />
+              <div>
+                <p className="text-white font-semibold">{leadInvestor.name}</p>
+                <p className="text-sm text-gray-400">{leadInvestor.bio}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4 mb-4">
+          {startups.map(startup => (
+            <div key={startup.id} className="bg-gray-700 rounded-lg overflow-hidden">
+              <img src={startup.imageUrl} alt={startup.name} className="w-full h-32 object-cover" />
+              <div className="p-2">
+                <h4 className="text-white font-semibold">{startup.name}</h4>
+                <p className="text-sm text-gray-400">{startup.description}</p>
               </div>
             </div>
           ))}
         </div>
-      </div>
 
-      <div className="campaign-progress">
-        <div className="goal-amount">
-          <span>Goal: ${selection.goal.toLocaleString()}</span>
-          <span className="current-amount">${selection.currentAmount.toLocaleString()}</span>
+        <div className="mb-4">
+          <div className="flex justify-between text-sm text-white mb-1">
+            <span>Goal: ${totalGoal.toLocaleString()}</span>
+            <span>${selection.currentAmount.toLocaleString()}</span>
+          </div>
+          <div className="bg-gray-700 rounded-full h-2 mb-1">
+            <div className="bg-green-500 h-2 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
+          </div>
+          <div className="flex justify-between text-xs text-gray-400">
+            <span>{progressPercentage.toFixed(0)}%</span>
+            <span>{selection.daysLeft} DAYS LEFT • {selection.backersCount} BACKERS</span>
+          </div>
         </div>
-        <div className="progress-bar">
-          <div className="progress" style={{ width: `${progressPercentage}%` }}></div>
-        </div>
-        <div className="progress-info">
-          <span>{progressPercentage.toFixed(0)}%</span>
-          <span>{selection.daysLeft} DAYS LEFT • {selection.backersCount} BACKERS</span>
-        </div>
-      </div>
 
-      <Button className="contribute-button">Contribute</Button>
+        <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition duration-300">
+          Contribute
+        </button>
 
-      <div className="section">
-        <h3 className="section-title">ADDITIONAL FUNDING</h3>
-        <div className="additional-funding">
-          {selection.additionalFunding.map((funding, index) => (
-            <div key={index} className="funding-item">
-              <p>{funding.name}</p>
-              <p className="funding-amount">${funding.amount.toLocaleString()}</p>
+        {selection.additionalFunding.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-sm font-semibold text-white mb-2">ADDITIONAL FUNDING</h3>
+            <div className="space-y-2">
+              {selection.additionalFunding.map((funding, index) => (
+                <div key={index} className="flex justify-between items-center bg-gray-700 rounded p-2">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gray-600 rounded-full mr-2"></div>
+                    <span className="text-white">{funding.name}</span>
+                  </div>
+                  <span className="text-green-500 font-semibold">${funding.amount.toLocaleString()}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

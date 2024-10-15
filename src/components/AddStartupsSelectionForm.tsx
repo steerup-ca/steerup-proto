@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import { db } from '../firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
-import { StartupsSelection, LeadInvestor, Startup } from '../types';
+import { StartupsSelection, LeadInvestor, Campaign, Startup } from '../types';
 import '../styles/forms.css';
 
 const AddStartupsSelectionForm: React.FC = () => {
   const [startupsSelection, setStartupsSelection] = useState<Omit<StartupsSelection, 'id'>>({
     title: '',
     selectionLead: '',
-    startups: [],
+    campaigns: [],
     goal: 0,
     currentAmount: 0,
     daysLeft: 0,
@@ -17,51 +17,69 @@ const AddStartupsSelectionForm: React.FC = () => {
     additionalFunding: [],
   });
 
-  const [leadInvestors, setLeadInvestors] = useState<LeadInvestor[]>([]);
-  const [availableStartups, setAvailableStartups] = useState<Startup[]>([]);
+  const [leadInvestors, setLeadInvestors] = useState<{ [id: string]: LeadInvestor }>({});
+  const [availableCampaigns, setAvailableCampaigns] = useState<Campaign[]>([]);
+  const [startups, setStartups] = useState<{ [id: string]: Startup }>({});
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    const fetchLeadInvestors = async () => {
+    const fetchData = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'leadInvestors'));
-        const investors = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LeadInvestor));
-        setLeadInvestors(investors);
+        // Fetch lead investors
+        const leadInvestorsSnapshot = await getDocs(collection(db, 'leadInvestors'));
+        const leadInvestorsData = leadInvestorsSnapshot.docs.reduce((acc, doc) => {
+          acc[doc.id] = { id: doc.id, ...doc.data() } as LeadInvestor;
+          return acc;
+        }, {} as { [id: string]: LeadInvestor });
+        setLeadInvestors(leadInvestorsData);
+
+        // Fetch campaigns
+        const campaignsSnapshot = await getDocs(collection(db, 'campaigns'));
+        const campaignsData = campaignsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            creation_date: data.creation_date,
+          } as Campaign;
+        });
+        setAvailableCampaigns(campaignsData);
+
+        // Fetch startups
+        const startupsSnapshot = await getDocs(collection(db, 'startups'));
+        const startupsData = startupsSnapshot.docs.reduce((acc, doc) => {
+          acc[doc.id] = { id: doc.id, ...doc.data() } as Startup;
+          return acc;
+        }, {} as { [id: string]: Startup });
+        setStartups(startupsData);
       } catch (error) {
-        console.error('Error fetching lead investors:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    const fetchStartups = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'startups'));
-        const startups = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Startup));
-        setAvailableStartups(startups);
-      } catch (error) {
-        console.error('Error fetching startups:', error);
-      }
-    };
-
-    fetchLeadInvestors();
-    fetchStartups();
+    fetchData();
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setStartupsSelection(prev => ({
       ...prev,
-      [name]: name === 'goal' || name === 'currentAmount' || name === 'daysLeft' || name === 'backersCount'
+      [name]: name === 'currentAmount' || name === 'daysLeft' || name === 'backersCount'
         ? Number(value)
         : value,
     }));
   };
 
-  const handleStartupsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedStartupIds = Array.from(e.target.selectedOptions, option => option.value);
+  const handleCampaignsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCampaignIds = Array.from(e.target.selectedOptions, option => option.value);
+    const selectedCampaigns = availableCampaigns.filter(campaign => selectedCampaignIds.includes(campaign.id));
+    const newGoal = selectedCampaigns.reduce((sum, campaign) => sum + campaign.steerup_amount, 0);
+
     setStartupsSelection(prev => ({
       ...prev,
-      startups: selectedStartupIds,
+      campaigns: selectedCampaignIds,
+      goal: newGoal,
     }));
   };
 
@@ -106,7 +124,7 @@ const AddStartupsSelectionForm: React.FC = () => {
       setStartupsSelection({
         title: '',
         selectionLead: '',
-        startups: [],
+        campaigns: [],
         goal: 0,
         currentAmount: 0,
         daysLeft: 0,
@@ -123,6 +141,13 @@ const AddStartupsSelectionForm: React.FC = () => {
         setErrorMessage('An unknown error occurred. Please try again.');
       }
     }
+  };
+
+  const formatCampaignOption = (campaign: Campaign) => {
+    const startup = startups[campaign.startupId];
+    const leadInvestor = leadInvestors[campaign.leadInvestorId];
+    const date = campaign.creation_date.toDate().toLocaleDateString();
+    return `${startup?.name || 'Unknown Startup'} - ${leadInvestor?.name || 'Unknown Investor'} - ${date} - $${campaign.steerup_amount}`;
   };
 
   return (
@@ -156,7 +181,7 @@ const AddStartupsSelectionForm: React.FC = () => {
           className="form-input"
         >
           <option value="">Select a Lead Investor</option>
-          {leadInvestors.map((investor) => (
+          {Object.values(leadInvestors).map((investor) => (
             <option key={investor.id} value={investor.id}>
               {investor.name}
             </option>
@@ -165,36 +190,28 @@ const AddStartupsSelectionForm: React.FC = () => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="startups">Startups</label>
-        <p className="form-instruction">Hold Ctrl (Windows) or Cmd (Mac) to select multiple startups</p>
+        <label htmlFor="campaigns">Campaigns</label>
+        <p className="form-instruction">Hold Ctrl (Windows) or Cmd (Mac) to select multiple campaigns</p>
         <select
-          id="startups"
-          name="startups"
+          id="campaigns"
+          name="campaigns"
           multiple
-          value={startupsSelection.startups}
-          onChange={handleStartupsChange}
+          value={startupsSelection.campaigns}
+          onChange={handleCampaignsChange}
           required
           className="form-input"
         >
-          {availableStartups.map((startup) => (
-            <option key={startup.id} value={startup.id}>
-              {startup.name}
+          {availableCampaigns.map((campaign) => (
+            <option key={campaign.id} value={campaign.id}>
+              {formatCampaignOption(campaign)}
             </option>
           ))}
         </select>
       </div>
 
       <div className="form-group">
-        <label htmlFor="goal">Goal</label>
-        <input
-          type="number"
-          id="goal"
-          name="goal"
-          value={startupsSelection.goal}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
+        <label>Goal Amount (Computed)</label>
+        <p>${startupsSelection.goal.toLocaleString()}</p>
       </div>
 
       <div className="form-group">

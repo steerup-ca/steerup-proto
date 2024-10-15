@@ -18,6 +18,7 @@ const Navbar: React.FC = () => {
               <li><Link to="/admin/add-lead-investor" className="block px-4 py-2 text-sm text-white hover:bg-primary">Add Lead Investor</Link></li>
               <li><Link to="/admin/add-startup" className="block px-4 py-2 text-sm text-white hover:bg-primary">Add Startup</Link></li>
               <li><Link to="/admin/add-startups-selection" className="block px-4 py-2 text-sm text-white hover:bg-primary">Add Startups Selection</Link></li>
+              <li><Link to="/admin/add-campaign" className="block px-4 py-2 text-sm text-white hover:bg-primary">Add Campaign</Link></li>
             </ul>
           )}
         </li>

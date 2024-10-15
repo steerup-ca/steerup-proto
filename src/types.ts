@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export interface InvestmentHistoryItem {
   companyName: string;
   amount: number;
@@ -52,7 +54,7 @@ export interface StartupsSelection {
   id: string;
   title: string;
   selectionLead: string;
-  startups: string[];
+  campaigns: string[];
   goal: number;
   currentAmount: number;
   daysLeft: number;
@@ -62,6 +64,21 @@ export interface StartupsSelection {
     description: string;
     amount: number;
   }[];
+}
+
+export interface Campaign {
+  id: string;
+  startupId: string;
+  leadInvestorId: string;
+  creation_date: Timestamp;
+  steerup_amount: number;
+  offeringDetails: {
+    minAmount: number;
+    maxAmount: number;
+    equity: number;
+    valuation: number;
+    offeringDocument: string;
+  }
 }
 
 export {};
