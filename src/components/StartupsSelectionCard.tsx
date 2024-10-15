@@ -1,106 +1,117 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { StartupsSelection, LeadInvestor, Startup, Campaign } from '../types';
+import { StartupsSelection, LeadInvestor, Startup, Investment, Campaign } from '../types';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface StartupsSelectionCardProps {
   selection: StartupsSelection;
-  leadInvestor?: LeadInvestor;
+  leadInvestor: LeadInvestor;
   startups: Startup[];
   campaigns: Campaign[];
 }
 
 const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection, leadInvestor, startups, campaigns }) => {
+  const [totalRaised, setTotalRaised] = useState<number>(0);
+  const [backersCount, setBackersCount] = useState<number>(0);
   const navigate = useNavigate();
-  const totalGoal = campaigns.reduce((sum, campaign) => sum + campaign.steerup_amount, 0);
-  const progressPercentage = (selection.currentAmount / totalGoal) * 100;
+
+  useEffect(() => {
+    const fetchInvestmentData = async () => {
+      try {
+        const investmentsQuery = query(collection(db, 'investments'), where('selectionId', '==', selection.id));
+        const investmentsSnap = await getDocs(investmentsQuery);
+        const investments = investmentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Investment);
+
+        const total = investments.reduce((sum, inv) => sum + inv.amount, 0);
+        const uniqueBackers = new Set(investments.map(inv => inv.userId)).size;
+
+        setTotalRaised(total);
+        setBackersCount(uniqueBackers);
+      } catch (error) {
+        console.error('Error fetching investment data:', error);
+      }
+    };
+
+    fetchInvestmentData();
+  }, [selection.id]);
+
+  const progressPercentage = (totalRaised / selection.goal) * 100;
 
   const handleCoInvest = () => {
     navigate(`/co-invest/${selection.id}`);
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden">
-      <div className="p-4">
-        <div className="flex items-center mb-4">
-          <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mr-4">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-white">{selection.title}</h2>
-            <p className="text-sm text-gray-400">Immersive Gaming Experience</p>
-          </div>
+    <div className="rounded-lg overflow-hidden shadow-lg" style={{
+      background: 'linear-gradient(to bottom, #3a4a5c, #1f2937)'
+    }}>
+      <div className="p-6 relative">
+        <div className="absolute top-2 right-2 bg-purple-600 rounded-full p-2">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-4">{selection.title}</h2>
+        
+        <div className="mb-6">
+          <h3 className="text-base font-semibold mb-2 text-gray-300">SELECTION LEAD</h3>
+          <Link to={`/lead-investor/${leadInvestor.id}`} className="flex items-center">
+            <img src={leadInvestor.photo} alt={leadInvestor.name} className="w-12 h-12 rounded-full mr-4" />
+            <div>
+              <p className="font-semibold text-white">{leadInvestor.name}</p>
+              <p className="text-sm text-gray-300">{leadInvestor.bio}</p>
+            </div>
+          </Link>
         </div>
 
-        {leadInvestor && (
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold text-white mb-2">SELECTION LEAD</h3>
-            <Link to={`/lead-investor/${leadInvestor.id}`} className="block hover:bg-gray-700 rounded-lg transition duration-300">
-              <div className="flex items-center p-2">
-                <img src={leadInvestor.photo} alt={leadInvestor.name} className="w-12 h-12 rounded-full mr-4" />
-                <div>
-                  <p className="text-white font-semibold">{leadInvestor.name}</p>
-                  <p className="text-sm text-gray-400">{leadInvestor.bio}</p>
-                </div>
-              </div>
-            </Link>
-          </div>
-        )}
-
-        <div className="space-y-4 mb-4">
-          {startups.map(startup => (
-            <Link key={startup.id} to={`/startup/${startup.id}`} className="block hover:opacity-90 transition duration-300">
-              <div className="relative h-32 rounded-lg overflow-hidden">
-                <img src={startup.imageUrl} alt={startup.name} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-2">
-                  <h4 className="text-white font-semibold text-shadow">{startup.name}</h4>
-                  <p className="text-sm text-gray-200 text-shadow">{startup.description}</p>
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          {startups.map((startup) => (
+            <Link key={startup.id} to={`/startup/${startup.id}`} className="relative overflow-hidden rounded-lg" style={{ height: '160px' }}>
+              <img src={startup.imageUrl} alt={startup.name} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent">
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <h4 className="font-semibold text-white text-lg mb-1">{startup.name}</h4>
+                  <p className="text-xs text-gray-300 line-clamp-2">{startup.description}</p>
                 </div>
               </div>
             </Link>
           ))}
         </div>
 
-        <div className="mb-4">
-          <div className="flex justify-between text-sm text-white mb-1">
-            <span>Goal: ${totalGoal.toLocaleString()}</span>
-            <span>${selection.currentAmount.toLocaleString()}</span>
+        <div className="mb-6">
+          <div className="flex justify-between text-sm mb-2 text-white">
+            <span>Goal: ${selection.goal.toLocaleString()}</span>
+            <span>${totalRaised.toLocaleString()}</span>
           </div>
-          <div className="bg-gray-700 rounded-full h-2 mb-1">
-            <div className="bg-green-500 h-2 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
+          <div className="w-full bg-gray-700 rounded-full h-4">
+            <div
+              className="bg-green-500 h-4 rounded-full"
+              style={{ width: `${progressPercentage}%` }}
+            ></div>
           </div>
-          <div className="flex justify-between text-xs text-gray-400">
+          <div className="flex justify-between text-sm mt-2 text-gray-300">
             <span>{progressPercentage.toFixed(0)}%</span>
-            <span>{selection.daysLeft} DAYS LEFT • {selection.backersCount} BACKERS</span>
+            <span>{backersCount} BACKERS • {selection.daysLeft} DAYS LEFT</span>
           </div>
         </div>
 
         <button 
           onClick={handleCoInvest}
-          className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition duration-300"
+          className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold mb-6 hover:bg-purple-700 transition-colors duration-200 text-lg"
         >
           Co-invest
         </button>
 
-        {selection.additionalFunding.length > 0 && (
-          <div className="mt-4">
-            <h3 className="text-sm font-semibold text-white mb-2">ADDITIONAL FUNDING</h3>
-            <div className="space-y-2">
-              {selection.additionalFunding.map((funding, index) => (
-                <div key={index} className="flex justify-between items-center bg-gray-700 rounded p-2">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full mr-2"></div>
-                    <span className="text-white">{funding.name}</span>
-                  </div>
-                  <span className="text-green-500 font-semibold">${funding.amount.toLocaleString()}</span>
-                </div>
-              ))}
+        <div>
+          <h3 className="text-base font-semibold mb-2 text-gray-300">ADDITIONAL FUNDING</h3>
+          {selection.additionalFunding.map((funding, index) => (
+            <div key={index} className="bg-gray-800/50 rounded-lg p-3 flex justify-between items-center mb-2">
+              <span className="text-white">{funding.name}</span>
+              <span className="text-green-500">${funding.amount.toLocaleString()}</span>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
     </div>
   );

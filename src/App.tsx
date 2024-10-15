@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './styles/theme.css';  // Import theme.css first
 import './App.css';  // Then import App.css
 import Header from './components/Header';

@@ -53,6 +53,7 @@ export interface Startup {
 export interface StartupsSelection {
   id: string;
   title: string;
+  description?: string;  // Made this optional
   selectionLead: string;
   campaigns: string[];
   goal: number;
@@ -79,6 +80,15 @@ export interface Campaign {
     valuation: number;
     offeringDocument: string;
   }
+}
+
+export interface Investment {
+  id: string;
+  date: Timestamp;
+  amount: number;
+  selectionId: string;
+  userId: string;
+  status: 'processing' | 'completed' | 'failed';
 }
 
 export {};
