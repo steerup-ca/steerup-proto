@@ -43,11 +43,12 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
 
         <div className="space-y-4 mb-4">
           {startups.map(startup => (
-            <div key={startup.id} className="bg-gray-700 rounded-lg overflow-hidden">
-              <img src={startup.imageUrl} alt={startup.name} className="w-full h-32 object-cover" />
-              <div className="p-2">
-                <h4 className="text-white font-semibold">{startup.name}</h4>
-                <p className="text-sm text-gray-400">{startup.description}</p>
+            <div key={startup.id} className="relative h-32 rounded-lg overflow-hidden">
+              <img src={startup.imageUrl} alt={startup.name} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-2">
+                <h4 className="text-white font-semibold text-shadow">{startup.name}</h4>
+                <p className="text-sm text-gray-200 text-shadow">{startup.description}</p>
               </div>
             </div>
           ))}
