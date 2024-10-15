@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { StartupsSelection, LeadInvestor, Startup, Campaign } from '../types';
 
 interface StartupsSelectionCardProps {
@@ -10,8 +10,13 @@ interface StartupsSelectionCardProps {
 }
 
 const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection, leadInvestor, startups, campaigns }) => {
+  const navigate = useNavigate();
   const totalGoal = campaigns.reduce((sum, campaign) => sum + campaign.steerup_amount, 0);
   const progressPercentage = (selection.currentAmount / totalGoal) * 100;
+
+  const handleCoInvest = () => {
+    navigate(`/co-invest/${selection.id}`);
+  };
 
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden">
@@ -73,8 +78,11 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
           </div>
         </div>
 
-        <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition duration-300">
-          Contribute
+        <button 
+          onClick={handleCoInvest}
+          className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition duration-300"
+        >
+          Co-invest
         </button>
 
         {selection.additionalFunding.length > 0 && (

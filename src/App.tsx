@@ -12,6 +12,7 @@ import ExplorePage from './components/ExplorePage';
 import StartupDetailsPage from './components/StartupDetailsPage';
 import LeadInvestorDetailsPage from './components/LeadInvestorDetailsPage';
 import LandingPage from './components/LandingPage';
+import CoInvestPage from './components/CoInvestPage';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/startup/:id" element={<StartupDetailsPage />} />
         <Route path="/lead-investor/:id" element={<LeadInvestorDetailsPage />} />
+        <Route path="/co-invest/:id" element={<CoInvestPage />} />
         <Route path="/admin/add-lead-investor" element={<AddLeadInvestorForm />} />
         <Route path="/admin/add-startup" element={<AddStartupForm />} />
         <Route path="/admin/add-startups-selection" element={<AddStartupsSelectionForm />} />
