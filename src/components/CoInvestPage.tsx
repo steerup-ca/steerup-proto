@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { StartupsSelection, Campaign, Startup, LeadInvestor } from '../types';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { StartupsSelection, Campaign, Startup, LeadInvestor, Investment } from '../types';
+import { doc, getDoc, addDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import InvestmentModal from './InvestmentModal';
 
 const CoInvestPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,8 @@ const CoInvestPage: React.FC = () => {
   const [selectionLead, setSelectionLead] = useState<LeadInvestor | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [modalStatus, setModalStatus] = useState<'processing' | 'completed' | 'failed'>('processing');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,10 +80,56 @@ const CoInvestPage: React.FC = () => {
     setInvestmentAmount(amount.toString());
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(`Investment of $${investmentAmount} submitted for selection ${id}`);
-    navigate('/');
+    setIsModalOpen(true);
+    setModalStatus('processing');
+
+    try {
+      // Simulate a delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      if (id && selection) {
+        const amount = parseInt(investmentAmount);
+        
+        // Add the investment to the database
+        const newInvestment: Omit<Investment, 'id'> = {
+          date: Timestamp.now(),
+          amount: amount,
+          selectionId: id,
+          userId: 'current-user-id', // Replace with actual user ID when authentication is implemented
+          status: 'completed'
+        };
+
+        const docRef = await addDoc(collection(db, 'investments'), newInvestment);
+
+        // Update the local state to reflect the investment
+        setSelection(prevSelection => {
+          if (prevSelection) {
+            return {
+              ...prevSelection,
+              currentAmount: prevSelection.currentAmount + amount,
+              backersCount: prevSelection.backersCount + 1
+            };
+          }
+          return prevSelection;
+        });
+
+        setModalStatus('completed');
+      } else {
+        throw new Error('Invalid selection or ID');
+      }
+    } catch (error) {
+      console.error('Error processing investment:', error);
+      setModalStatus('failed');
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    if (modalStatus === 'completed') {
+      navigate('/');
+    }
   };
 
   if (loading) {
@@ -244,6 +293,14 @@ const CoInvestPage: React.FC = () => {
           View Full Prospectus
         </Link>
       </div>
+
+      {/* Investment Modal */}
+      <InvestmentModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        status={modalStatus}
+        amount={parseInt(investmentAmount) || 0}
+      />
     </div>
   );
 };
