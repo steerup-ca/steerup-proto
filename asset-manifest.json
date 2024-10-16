@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "https://steerup-ca.github.io/steerup-proto/static/css/main.6a31253f.css",
-    "main.js": "https://steerup-ca.github.io/steerup-proto/static/js/main.1e8d722a.js",
+    "main.css": "https://steerup-ca.github.io/steerup-proto/static/css/main.b23ad618.css",
+    "main.js": "https://steerup-ca.github.io/steerup-proto/static/js/main.ccd5fecf.js",
     "static/js/453.2a851045.chunk.js": "https://steerup-ca.github.io/steerup-proto/static/js/453.2a851045.chunk.js",
     "index.html": "https://steerup-ca.github.io/steerup-proto/index.html",
-    "main.6a31253f.css.map": "https://steerup-ca.github.io/steerup-proto/static/css/main.6a31253f.css.map",
-    "main.1e8d722a.js.map": "https://steerup-ca.github.io/steerup-proto/static/js/main.1e8d722a.js.map",
+    "main.b23ad618.css.map": "https://steerup-ca.github.io/steerup-proto/static/css/main.b23ad618.css.map",
+    "main.ccd5fecf.js.map": "https://steerup-ca.github.io/steerup-proto/static/js/main.ccd5fecf.js.map",
     "453.2a851045.chunk.js.map": "https://steerup-ca.github.io/steerup-proto/static/js/453.2a851045.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.6a31253f.css",
-    "static/js/main.1e8d722a.js"
+    "static/css/main.b23ad618.css",
+    "static/js/main.ccd5fecf.js"
   ]
 }
