@@ -13,24 +13,28 @@ import StartupDetailsPage from './components/StartupDetailsPage';
 import LeadInvestorDetailsPage from './components/LeadInvestorDetailsPage';
 import LandingPage from './components/LandingPage';
 import CoInvestPage from './components/CoInvestPage';
+import ProfilePage from './components/ProfilePage';
 
 function App() {
   return (
-    <div className="App">
-      <Header />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/main" element={<MainContent />} />
-        <Route path="/explore" element={<ExplorePage />} />
-        <Route path="/startup/:id" element={<StartupDetailsPage />} />
-        <Route path="/lead-investor/:id" element={<LeadInvestorDetailsPage />} />
-        <Route path="/co-invest/:id" element={<CoInvestPage />} />
-        <Route path="/admin/add-lead-investor" element={<AddLeadInvestorForm />} />
-        <Route path="/admin/add-startup" element={<AddStartupForm />} />
-        <Route path="/admin/add-startups-selection" element={<AddStartupsSelectionForm />} />
-        <Route path="/admin/add-campaign" element={<AddCampaignForm />} />
-      </Routes>
-    </div>
+    <BrowserRouter>
+      <div className="App">
+        <Header />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/main" element={<MainContent />} />
+          <Route path="/explore" element={<ExplorePage />} />
+          <Route path="/startup/:id" element={<StartupDetailsPage />} />
+          <Route path="/lead-investor/:id" element={<LeadInvestorDetailsPage />} />
+          <Route path="/co-invest/:id" element={<CoInvestPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/admin/add-lead-investor" element={<AddLeadInvestorForm />} />
+          <Route path="/admin/add-startup" element={<AddStartupForm />} />
+          <Route path="/admin/add-startups-selection" element={<AddStartupsSelectionForm />} />
+          <Route path="/admin/add-campaign" element={<AddCampaignForm />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
 

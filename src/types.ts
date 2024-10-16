@@ -1,5 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 
+// Existing types...
+
 export interface InvestmentHistoryItem {
   companyName: string;
   amount: number;
@@ -53,7 +55,7 @@ export interface Startup {
 export interface StartupsSelection {
   id: string;
   title: string;
-  description?: string;  // Made this optional
+  description?: string;
   selectionLead: string;
   campaigns: string[];
   goal: number;
@@ -82,13 +84,75 @@ export interface Campaign {
   }
 }
 
+// Updated and new types...
+
+export enum KYCStatus {
+  Verified = 'Verified',
+  Pending = 'Pending',
+  NotVerified = 'Not Verified'
+}
+
+export enum AccreditationStatus {
+  NotAccredited = 'Not Accredited',
+  Accredited = 'Accredited',
+  Pending = 'Pending'
+}
+
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+export interface BankAccount {
+  id: string;
+  userId: string;
+  bankName: string;
+  accountNumber: string;
+  accountType: string;
+}
+
+export interface User {
+  id: string;
+  userId: string; // Steerup User ID (e.g., STRUP-123456789)
+  email: string;
+  name: string;
+  address: Address;
+  kycStatus: KYCStatus;
+  memberSince: Timestamp;
+  accreditationStatus: AccreditationStatus;
+  yearlyInvestmentLimit: number;
+  investedThisYear: number;
+  totalInvestments: number;
+  bankAccounts: BankAccount[];
+}
+
 export interface Investment {
   id: string;
+  userId: string;
+  selectionId: string;
   date: Timestamp;
   amount: number;
-  selectionId: string;
-  userId: string;
   status: 'processing' | 'completed' | 'failed';
+}
+
+export interface TaxReport {
+  id: string;
+  userId: string;
+  year: number;
+  fileUrl: string;
+  generatedDate: Timestamp;
+}
+
+export interface InvestmentSummary {
+  id: string;
+  userId: string;
+  year: number | 'all-time';
+  totalAmount: number;
+  numberOfInvestments: number;
+  generatedDate: Timestamp;
 }
 
 export {};
