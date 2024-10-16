@@ -101,8 +101,8 @@ export enum AccreditationStatus {
 export interface Address {
   street: string;
   city: string;
-  state: string;
-  zipCode: string;
+  provinceState: string;
+  postalCodeZip: string;
   country: string;
 }
 

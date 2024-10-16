@@ -2,7 +2,7 @@ import { db } from '../firebase';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { User, AccreditationStatus, KYCStatus } from '../types';
 
-export const setupTestUser = async () => {
+export const setupTestUser = async (): Promise<User> => {
   const testUser: User = {
     id: 'test-user-id',
     userId: 'STRUP-123456789',
@@ -11,8 +11,8 @@ export const setupTestUser = async () => {
     address: {
       street: '123 Main St',
       city: 'Anytown',
-      state: 'ST',
-      zipCode: '12345',
+      provinceState: 'ST',
+      postalCodeZip: '12345',
       country: 'Canada',
     },
     kycStatus: KYCStatus.Verified,
@@ -35,7 +35,9 @@ export const setupTestUser = async () => {
   try {
     await setDoc(doc(db, 'users', testUser.id), testUser);
     console.log('Test user data added successfully');
+    return testUser;
   } catch (error) {
     console.error('Error adding test user data:', error);
+    throw error;
   }
 };

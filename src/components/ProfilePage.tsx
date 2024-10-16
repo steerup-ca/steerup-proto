@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, BankAccount, AccreditationStatus, KYCStatus, Address } from '../types';
-import { doc, getDoc } from 'firebase/firestore';
+import { User, BankAccount, AccreditationStatus, KYCStatus, Address, Investment } from '../types';
+import { doc, getDoc, collection, query, where, getDocs, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { setupTestUser } from '../utils/setupTestData';
+import EditProfileModal from './EditProfileModal';
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -11,6 +11,7 @@ const ProfilePage: React.FC = () => {
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -19,13 +20,47 @@ const ProfilePage: React.FC = () => {
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
-        setUserData({ id: userSnap.id, ...userSnap.data() } as User);
+        console.log('User data found:', userSnap.data());
+        const user = { id: userSnap.id, ...userSnap.data() } as User;
+        
+        // Fetch all investments for the user
+        const investmentsQuery = query(
+          collection(db, 'investments'),
+          where('userId', '==', user.id)
+        );
+
+        const investmentsSnap = await getDocs(investmentsQuery);
+        const currentYear = new Date().getFullYear();
+        const startOfYear = new Date(currentYear, 0, 1).getTime();
+        const endOfYear = new Date(currentYear + 1, 0, 1).getTime();
+
+        const investedThisYear = investmentsSnap.docs.reduce((total, doc) => {
+          const investment = doc.data() as Investment;
+          const investmentDate = investment.date.toDate().getTime();
+          if (investment.status === 'completed' && investmentDate >= startOfYear && investmentDate < endOfYear) {
+            return total + investment.amount;
+          }
+          return total;
+        }, 0);
+
+        console.log('Invested this year:', investedThisYear);
+
+        // Update user's investedThisYear in the database
+        await updateDoc(userRef, { investedThisYear });
+
+        // Update local state
+        setUserData({ ...user, investedThisYear });
       } else {
-        setError('User not found');
+        console.log('User not found');
+        setError('User not found in the database');
       }
     } catch (err) {
       console.error('Error fetching user data:', err);
-      setError('Error fetching user data. Please try again.');
+      if (err instanceof Error) {
+        setError(`Error fetching user data: ${err.message}`);
+      } else {
+        setError('An unknown error occurred while fetching user data.');
+      }
     } finally {
       setLoading(false);
     }
@@ -35,193 +70,220 @@ const ProfilePage: React.FC = () => {
     fetchUserData();
   }, []);
 
-  const handleAddTestUser = async () => {
+  const handleSaveProfile = async (updatedUser: User) => {
     try {
-      await setupTestUser();
-      await fetchUserData();
+      const userRef = doc(db, 'users', updatedUser.id);
+      await updateDoc(userRef, {
+        name: updatedUser.name,
+        email: updatedUser.email,
+        address: updatedUser.address,
+      });
+      setUserData(updatedUser);
+      setIsEditModalOpen(false);
     } catch (err) {
-      console.error('Error adding test user:', err);
-      setError('Error adding test user. Please try again.');
-    }
-  };
-
-  // Helper function to mask email
-  const maskEmail = (email: string) => {
-    const [name, domain] = email.split('@');
-    return `${name[0]}${name[1]}****@${domain}`;
-  };
-
-  // Helper function to mask address
-  const maskAddress = (address: Address) => {
-    const parts = [address.street, address.city, address.state, address.zipCode, address.country];
-    const streetAddress = parts[0].trim();
-    const restOfAddress = parts.slice(1).join(', ').trim();
-    
-    const words = streetAddress.split(' ');
-    const maskedStreet = words.map((word: string, index: number) => 
-      index === 0 ? word : '*'.repeat(word.length)
-    ).join(' ');
-
-    return `${maskedStreet}, ${restOfAddress}`;
-  };
-
-  const toggleInvestmentVisibility = () => {
-    setIsInvestmentVisible(!isInvestmentVisible);
-  };
-
-  const renderTabContent = () => {
-    if (!userData) return null;
-
-    switch (activeTab) {
-      case 'personal':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Personal Information</h2>
-            <p><strong>Steerup User ID:</strong> {userData.userId}</p>
-            <p><strong>Name:</strong> {userData.name}</p>
-            <p><strong>Email:</strong> {maskEmail(userData.email)}</p>
-            <p><strong>Address:</strong> {maskAddress(userData.address)}</p>
-            <p><strong>KYC Status:</strong> {userData.kycStatus}</p>
-            <p><strong>Country:</strong> {userData.address.country}</p>
-          </div>
-        );
-      case 'financial':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Financial Information</h2>
-            {userData.bankAccounts.map((account: BankAccount, index: number) => (
-              <div key={account.id}>
-                <h3 className="text-xl font-semibold mb-2">Bank Account {index + 1}</h3>
-                <p><strong>Bank Name:</strong> {account.bankName}</p>
-                <p><strong>Account Number:</strong> {account.accountNumber}</p>
-                <p><strong>Account Type:</strong> {account.accountType}</p>
-              </div>
-            ))}
-          </div>
-        );
-      case 'account':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Account Details</h2>
-            <p><strong>Member Since:</strong> {userData.memberSince.toDate().toLocaleDateString()}</p>
-            <p><strong>Account Type:</strong> Investor</p>
-            <div className="flex items-center">
-              <p><strong>Total Investments:</strong> </p>
-              <button 
-                onClick={toggleInvestmentVisibility}
-                className="ml-2 px-2 py-1 bg-secondary-color text-button-text-color rounded-full text-sm"
-              >
-                {isInvestmentVisible ? 'Hide' : 'Show'}
-              </button>
-            </div>
-            <p>{isInvestmentVisible ? `$${userData.totalInvestments.toLocaleString()}` : '********'}</p>
-            <p><strong>Accredited Investor Status:</strong> {userData.accreditationStatus}</p>
-            {userData.accreditationStatus !== AccreditationStatus.Accredited && (
-              <div className="mt-2">
-                <Link to="/apply-for-accreditation" className="text-primary-color hover:underline">
-                  Apply for Accredited Investor Status
-                </Link>
-              </div>
-            )}
-            <p><strong>Yearly Investment Limit:</strong> {userData.accreditationStatus === AccreditationStatus.Accredited ? 'Unlimited' : `$${userData.yearlyInvestmentLimit.toLocaleString()}`}</p>
-            <p><strong>Invested This Year:</strong> ${userData.investedThisYear.toLocaleString()}</p>
-            <p><strong>Remaining Investment Capacity This Year:</strong> {userData.accreditationStatus === AccreditationStatus.Accredited ? 'Unlimited' : `$${(userData.yearlyInvestmentLimit - userData.investedThisYear).toLocaleString()}`}</p>
-            <div className="mt-4 text-sm text-gray-600">
-              <p>Note: Investment limits are based on your location and accreditation status. These limits may vary by country and are subject to change based on local regulations.</p>
-            </div>
-          </div>
-        );
-      case 'documents':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Documents & Reports</h2>
-            <h3 className="text-xl font-semibold mb-2">Tax Reports</h3>
-            <ul className="list-disc pl-5 mb-4">
-              <li>2023 Tax Report</li>
-              <li>2022 Tax Report</li>
-            </ul>
-            <h3 className="text-xl font-semibold mb-2">Investment Summaries</h3>
-            <ul className="list-disc pl-5">
-              <li>2023 Investment Summary</li>
-              <li>2022 Investment Summary</li>
-              <li>2021 Investment Summary</li>
-              <li>All-Time Investment Summary</li>
-            </ul>
-          </div>
-        );
-      default:
-        return null;
+      console.error('Error updating user profile:', err);
+      // You might want to show an error message to the user here
     }
   };
 
   if (loading) {
-    return <div className="text-center">Loading...</div>;
+    return <div className="text-center py-8" style={{ fontSize: 'var(--font-size-large)' }}>Loading...</div>;
   }
 
   if (error) {
-    return (
-      <div className="text-center">
-        <p className="text-red-500">{error}</p>
-        <button
-          onClick={handleAddTestUser}
-          className="mt-4 px-4 py-2 bg-primary-color text-button-text-color rounded-full"
-        >
-          Add Test User
-        </button>
-      </div>
-    );
+    return <div className="text-center py-8 text-red-500" style={{ fontSize: 'var(--font-size-large)' }}>{error}</div>;
   }
 
   if (!userData) {
-    return (
-      <div className="text-center">
-        <p>No user data available</p>
-        <button
-          onClick={handleAddTestUser}
-          className="mt-4 px-4 py-2 bg-primary-color text-button-text-color rounded-full"
-        >
-          Add Test User
-        </button>
-      </div>
-    );
+    return <div className="text-center py-8" style={{ fontSize: 'var(--font-size-large)' }}>No user data available</div>;
   }
 
+  const InfoItem: React.FC<{ label: string; value: string | number; note?: string; children?: React.ReactNode }> = ({ label, value, note, children }) => (
+    <div className="mb-3 p-3 rounded" style={{ backgroundColor: 'var(--detail-item-bg-color)' }}>
+      <span className="font-semibold" style={{ fontSize: 'var(--font-size-small)', color: 'var(--text-color)' }}>{label}:</span>
+      <span className="ml-2" style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>{value}</span>
+      {note && <p className="mt-1" style={{ fontSize: 'var(--font-size-xsmall)', color: 'var(--secondary-color)' }}>{note}</p>}
+      {children}
+    </div>
+  );
+
+  const ButtonStyle = {
+    backgroundColor: 'var(--primary-color)',
+    color: 'var(--button-text-color)',
+    borderRadius: 'var(--button-border-radius)',
+    padding: '0.5rem 1rem',
+    fontSize: 'var(--font-size-small)',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s, transform 0.1s',
+    ':hover': {
+      filter: 'brightness(110%)',
+      transform: 'scale(1.05)',
+    },
+  };
+
+  const amountLeftToInvest = Math.max(0, userData.yearlyInvestmentLimit - userData.investedThisYear);
+  const isInvestmentLimitReached = amountLeftToInvest === 0;
+
   return (
-    <div className="container mx-auto px-4 py-8 bg-background-color text-text-color">
-      <h1 className="text-4xl font-bold mb-8 text-center text-primary-color">User Profile</h1>
+    <div className="container mx-auto px-4 py-8" style={{ backgroundColor: 'var(--background-color)', color: 'var(--text-color)' }}>
+      <h1 className="text-3xl font-bold mb-6" style={{ fontSize: 'var(--font-size-xlarge)', color: 'var(--text-color)' }}>User Profile</h1>
       
-      <div className="flex mb-6">
+      <div className="mb-6 flex flex-wrap gap-2">
         <button
-          className={`mr-4 px-4 py-2 rounded-full ${activeTab === 'personal' ? 'bg-primary-color text-button-text-color' : 'bg-secondary-color text-text-color'}`}
           onClick={() => setActiveTab('personal')}
+          style={{
+            ...ButtonStyle,
+            backgroundColor: activeTab === 'personal' ? 'var(--primary-color)' : 'var(--secondary-color)',
+          }}
         >
-          Personal
+          Personal Information
         </button>
         <button
-          className={`mr-4 px-4 py-2 rounded-full ${activeTab === 'financial' ? 'bg-primary-color text-button-text-color' : 'bg-secondary-color text-text-color'}`}
-          onClick={() => setActiveTab('financial')}
+          onClick={() => setActiveTab('bank')}
+          style={{
+            ...ButtonStyle,
+            backgroundColor: activeTab === 'bank' ? 'var(--primary-color)' : 'var(--secondary-color)',
+          }}
         >
-          Financial
+          Bank Information
         </button>
         <button
-          className={`mr-4 px-4 py-2 rounded-full ${activeTab === 'account' ? 'bg-primary-color text-button-text-color' : 'bg-secondary-color text-text-color'}`}
-          onClick={() => setActiveTab('account')}
+          onClick={() => setActiveTab('investment-summary')}
+          style={{
+            ...ButtonStyle,
+            backgroundColor: activeTab === 'investment-summary' ? 'var(--primary-color)' : 'var(--secondary-color)',
+          }}
         >
-          Account
+          Investment Summary
         </button>
         <button
-          className={`px-4 py-2 rounded-full ${activeTab === 'documents' ? 'bg-primary-color text-button-text-color' : 'bg-secondary-color text-text-color'}`}
-          onClick={() => setActiveTab('documents')}
+          onClick={() => setActiveTab('investment-reports')}
+          style={{
+            ...ButtonStyle,
+            backgroundColor: activeTab === 'investment-reports' ? 'var(--primary-color)' : 'var(--secondary-color)',
+          }}
         >
-          Documents
+          Investment Reports
         </button>
       </div>
 
-      <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden">
-        <div className="p-6">
-          {renderTabContent()}
-        </div>
+      <div className="bg-card-bg-color p-6 rounded-lg shadow-md" style={{ backgroundColor: 'var(--card-bg-color)', borderRadius: 'var(--border-radius)', boxShadow: 'var(--box-shadow)' }}>
+        {activeTab === 'personal' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold" style={{ fontSize: 'var(--font-size-large)', color: 'var(--text-color)' }}>Personal Information</h2>
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                style={{...ButtonStyle, backgroundColor: 'var(--secondary-color)'}}
+              >
+                Edit Profile
+              </button>
+            </div>
+            <InfoItem label="Name" value={userData.name} />
+            <InfoItem label="Email" value={userData.email} />
+            <InfoItem label="Address" value={`${userData.address.street}, ${userData.address.city}, ${userData.address.provinceState} ${userData.address.postalCodeZip}, ${userData.address.country}`} />
+            <InfoItem label="Accreditation Status" value={userData.accreditationStatus}>
+              {userData.accreditationStatus !== AccreditationStatus.Accredited && (
+                <button
+                  onClick={() => {/* TODO: Implement apply for accredited investor logic */}}
+                  style={{
+                    ...ButtonStyle,
+                    backgroundColor: 'var(--success-color)',
+                    marginLeft: '1rem',
+                    opacity: userData.accreditationStatus === AccreditationStatus.Pending ? 0.5 : 1,
+                    cursor: userData.accreditationStatus === AccreditationStatus.Pending ? 'not-allowed' : 'pointer',
+                  }}
+                  disabled={userData.accreditationStatus === AccreditationStatus.Pending}
+                >
+                  {userData.accreditationStatus === AccreditationStatus.Pending ? 'Application Pending' : 'Apply for Accredited Investor Status'}
+                </button>
+              )}
+            </InfoItem>
+            <InfoItem label="KYC Status" value={userData.kycStatus} />
+            <InfoItem label="Member Since" value={userData.memberSince.toDate().toLocaleDateString()} />
+            <InfoItem label="Yearly Investment Limit" value={`$${userData.yearlyInvestmentLimit.toLocaleString()}`} />
+            <InfoItem label="Invested This Year" value={`$${userData.investedThisYear.toLocaleString()}`} />
+            <InfoItem 
+              label="Amount Left to Invest This Year" 
+              value={`$${amountLeftToInvest.toLocaleString()}`}
+              note={isInvestmentLimitReached ? "You have reached your yearly investment limit." : ""}
+            />
+            <InfoItem label="Total Investments" value={`$${userData.totalInvestments.toLocaleString()}`} />
+          </div>
+        )}
+
+        {activeTab === 'bank' && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-4" style={{ fontSize: 'var(--font-size-large)', color: 'var(--text-color)' }}>Bank Information</h2>
+            {userData.bankAccounts.length > 0 ? (
+              userData.bankAccounts.map((account: BankAccount, index: number) => (
+                <div key={account.id} className="mb-4 p-4 rounded" style={{ backgroundColor: 'var(--detail-item-bg-color)' }}>
+                  <h3 className="text-xl font-semibold mb-2" style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>Account {index + 1}</h3>
+                  <InfoItem label="Bank Name" value={account.bankName} />
+                  <InfoItem label="Account Number" value={account.accountNumber} />
+                  <InfoItem label="Account Type" value={account.accountType} />
+                  <button
+                    onClick={() => {/* TODO: Implement set primary account logic */}}
+                    style={{...ButtonStyle, backgroundColor: 'var(--secondary-color)'}}
+                  >
+                    Set as Primary Account
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>No bank accounts added yet.</p>
+            )}
+            <button
+              onClick={() => {/* TODO: Implement add bank account logic */}}
+              style={{...ButtonStyle, backgroundColor: 'var(--success-color)'}}
+            >
+              Add Bank Account
+            </button>
+          </div>
+        )}
+
+        {activeTab === 'investment-summary' && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-4" style={{ fontSize: 'var(--font-size-large)', color: 'var(--text-color)' }}>Investment Summary</h2>
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-2" style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>Overall Investment Summary</h3>
+              <InfoItem label="Total Investments" value={`$${userData.totalInvestments.toLocaleString()}`} />
+            </div>
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-2" style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>Yearly Investment Summary</h3>
+              {/* TODO: Implement logic to show sum of investments for every year */}
+              <p style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>Yearly investment summary to be implemented...</p>
+            </div>
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-2" style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>Current Year Investment Summary</h3>
+              <InfoItem label="Yearly Investment Limit" value={`$${userData.yearlyInvestmentLimit.toLocaleString()}`} />
+              <InfoItem label="Invested This Year" value={`$${userData.investedThisYear.toLocaleString()}`} />
+              <InfoItem 
+                label="Amount Left to Invest This Year" 
+                value={`$${amountLeftToInvest.toLocaleString()}`}
+                note={isInvestmentLimitReached ? "You have reached your yearly investment limit." : ""}
+              />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'investment-reports' && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-4" style={{ fontSize: 'var(--font-size-large)', color: 'var(--text-color)' }}>Investment Reports</h2>
+            {/* TODO: Implement logic to fetch and display PDF reports */}
+            <p style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>Tax and investment reports will be listed here as PDF files for each year.</p>
+          </div>
+        )}
       </div>
+
+      {isEditModalOpen && (
+        <EditProfileModal
+          user={userData}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={handleSaveProfile}
+        />
+      )}
     </div>
   );
 };
