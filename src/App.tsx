@@ -1,9 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './styles/theme.css';  // Import theme.css first
 import './App.css';  // Then import App.css
 import Header from './components/Header';
-import MainContent from './components/MainContent';
 import AddLeadInvestorForm from './components/AddLeadInvestorForm';
 import AddStartupForm from './components/AddStartupForm';
 import AddStartupsSelectionForm from './components/AddStartupsSelectionForm';
@@ -17,12 +16,12 @@ import ProfilePage from './components/ProfilePage';
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="App">
         <Header />
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/main" element={<MainContent />} />
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<LandingPage />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/startup/:id" element={<StartupDetailsPage />} />
           <Route path="/lead-investor/:id" element={<LeadInvestorDetailsPage />} />
@@ -34,7 +33,7 @@ function App() {
           <Route path="/admin/add-campaign" element={<AddCampaignForm />} />
         </Routes>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
