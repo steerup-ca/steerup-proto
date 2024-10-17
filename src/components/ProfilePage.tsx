@@ -4,6 +4,7 @@ import { User, BankAccount, AccreditationStatus, KYCStatus, Address, Investment 
 import { doc, getDoc, collection, query, where, getDocs, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import EditProfileModal from './EditProfileModal';
+import AddBankAccountModal from './AddBankAccountModal';
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -12,6 +13,7 @@ const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddBankAccountModalOpen, setIsAddBankAccountModalOpen] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -82,6 +84,57 @@ const ProfilePage: React.FC = () => {
       setIsEditModalOpen(false);
     } catch (err) {
       console.error('Error updating user profile:', err);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  const handleAddBankAccount = async (newBankAccount: Omit<BankAccount, 'id' | 'userId'>) => {
+    if (!userData) return;
+
+    try {
+      const userRef = doc(db, 'users', userData.id);
+      const newBankAccountWithId: BankAccount = {
+        ...newBankAccount,
+        id: `bank-account-${Date.now()}`, // Generate a unique ID
+        userId: userData.id,
+      };
+
+      const updatedBankAccounts = [...userData.bankAccounts, newBankAccountWithId];
+      const updatedPrimaryBankAccountId = userData.primaryBankAccountId || newBankAccountWithId.id;
+
+      await updateDoc(userRef, {
+        bankAccounts: updatedBankAccounts,
+        primaryBankAccountId: updatedPrimaryBankAccountId,
+      });
+
+      setUserData({
+        ...userData,
+        bankAccounts: updatedBankAccounts,
+        primaryBankAccountId: updatedPrimaryBankAccountId,
+      });
+
+      setIsAddBankAccountModalOpen(false);
+    } catch (err) {
+      console.error('Error adding bank account:', err);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  const handleSetPrimaryAccount = async (accountId: string) => {
+    if (!userData) return;
+
+    try {
+      const userRef = doc(db, 'users', userData.id);
+      await updateDoc(userRef, {
+        primaryBankAccountId: accountId,
+      });
+
+      setUserData({
+        ...userData,
+        primaryBankAccountId: accountId,
+      });
+    } catch (err) {
+      console.error('Error setting primary account:', err);
       // You might want to show an error message to the user here
     }
   };
@@ -215,31 +268,44 @@ const ProfilePage: React.FC = () => {
 
         {activeTab === 'bank' && (
           <div>
-            <h2 className="text-2xl font-semibold mb-4" style={{ fontSize: 'var(--font-size-large)', color: 'var(--text-color)' }}>Bank Information</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold" style={{ fontSize: 'var(--font-size-large)', color: 'var(--text-color)' }}>Bank Information</h2>
+              <button
+                onClick={() => setIsAddBankAccountModalOpen(true)}
+                style={{...ButtonStyle, backgroundColor: 'var(--success-color)'}}
+              >
+                Add Bank Account
+              </button>
+            </div>
             {userData.bankAccounts.length > 0 ? (
               userData.bankAccounts.map((account: BankAccount, index: number) => (
                 <div key={account.id} className="mb-4 p-4 rounded" style={{ backgroundColor: 'var(--detail-item-bg-color)' }}>
-                  <h3 className="text-xl font-semibold mb-2" style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>Account {index + 1}</h3>
+                  <h3 className="text-xl font-semibold mb-2" style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>
+                    Account {index + 1}
+                    {account.id === userData.primaryBankAccountId && (
+                      <span className="ml-2 px-2 py-1 bg-green-500 text-white rounded-full text-xs">Primary</span>
+                    )}
+                  </h3>
                   <InfoItem label="Bank Name" value={account.bankName} />
                   <InfoItem label="Account Number" value={account.accountNumber} />
                   <InfoItem label="Account Type" value={account.accountType} />
                   <button
-                    onClick={() => {/* TODO: Implement set primary account logic */}}
-                    style={{...ButtonStyle, backgroundColor: 'var(--secondary-color)'}}
+                    onClick={() => handleSetPrimaryAccount(account.id)}
+                    style={{
+                      ...ButtonStyle,
+                      backgroundColor: 'var(--secondary-color)',
+                      opacity: account.id === userData.primaryBankAccountId ? 0.5 : 1,
+                      cursor: account.id === userData.primaryBankAccountId ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={account.id === userData.primaryBankAccountId}
                   >
-                    Set as Primary Account
+                    {account.id === userData.primaryBankAccountId ? 'Primary Account' : 'Set as Primary Account'}
                   </button>
                 </div>
               ))
             ) : (
               <p style={{ fontSize: 'var(--font-size-medium)', color: 'var(--text-color)' }}>No bank accounts added yet.</p>
             )}
-            <button
-              onClick={() => {/* TODO: Implement add bank account logic */}}
-              style={{...ButtonStyle, backgroundColor: 'var(--success-color)'}}
-            >
-              Add Bank Account
-            </button>
           </div>
         )}
 
@@ -282,6 +348,13 @@ const ProfilePage: React.FC = () => {
           user={userData}
           onClose={() => setIsEditModalOpen(false)}
           onSave={handleSaveProfile}
+        />
+      )}
+
+      {isAddBankAccountModalOpen && (
+        <AddBankAccountModal
+          onClose={() => setIsAddBankAccountModalOpen(false)}
+          onSave={handleAddBankAccount}
         />
       )}
     </div>

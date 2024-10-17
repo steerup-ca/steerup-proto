@@ -127,6 +127,7 @@ export interface User {
   investedThisYear: number;
   totalInvestments: number;
   bankAccounts: BankAccount[];
+  primaryBankAccountId: string | null;
 }
 
 export interface Investment {

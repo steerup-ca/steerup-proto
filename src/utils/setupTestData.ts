@@ -3,6 +3,7 @@ import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { User, AccreditationStatus, KYCStatus } from '../types';
 
 export const setupTestUser = async (): Promise<User> => {
+  const bankAccountId = 'bank-account-1';
   const testUser: User = {
     id: 'test-user-id',
     userId: 'STRUP-123456789',
@@ -23,13 +24,14 @@ export const setupTestUser = async (): Promise<User> => {
     totalInvestments: 50000,
     bankAccounts: [
       {
-        id: 'bank-account-1',
+        id: bankAccountId,
         userId: 'test-user-id',
         bankName: 'Example Bank',
         accountNumber: '**** **** **** 1234',
         accountType: 'Checking',
       },
     ],
+    primaryBankAccountId: bankAccountId,
   };
 
   try {
