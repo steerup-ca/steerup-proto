@@ -1,7 +1,32 @@
 import { Timestamp } from 'firebase/firestore';
 
-// Existing types...
+// Investment Stage Types
+export enum InvestmentStage {
+  INITIATION = 'INITIATION',
+  CONFIRMATION = 'CONFIRMATION',
+  PAYMENT_VALIDATION = 'PAYMENT_VALIDATION',
+  FUNDS_IN_CUSTODY = 'FUNDS_IN_CUSTODY',
+  SHARE_ISSUANCE = 'SHARE_ISSUANCE',
+  FUNDS_TRANSFER = 'FUNDS_TRANSFER',
+  FUND_DEPLOYMENT = 'FUND_DEPLOYMENT',
+  PERFORMANCE_TRACKING = 'PERFORMANCE_TRACKING'
+}
 
+export interface InvestmentStageDetail {
+  stage: InvestmentStage;
+  status: 'pending' | 'active' | 'completed' | 'failed';
+  timestamp?: Timestamp;
+  message: string;
+  details?: string;
+}
+
+export interface InvestmentTracking {
+  currentStage: InvestmentStage;
+  stages: InvestmentStageDetail[];
+  lastUpdated: Timestamp;
+}
+
+// Existing types...
 export interface InvestmentHistoryItem {
   companyName: string;
   amount: number;
@@ -84,7 +109,6 @@ export interface Campaign {
   }
 }
 
-// Portfolio types
 export interface PortfolioInvestment {
   id: string;
   userId: string;
@@ -110,6 +134,7 @@ export interface PortfolioInvestment {
     roi: number;
     lastValuationDate: Timestamp;
   };
+  tracking: InvestmentTracking;
 }
 
 export interface PortfolioSummary {
@@ -122,8 +147,6 @@ export interface PortfolioSummary {
   activeInvestments: number;
   exitedInvestments: number;
 }
-
-// Updated and new types...
 
 export enum KYCStatus {
   Verified = 'Verified',
@@ -155,7 +178,7 @@ export interface BankAccount {
 
 export interface User {
   id: string;
-  userId: string; // Steerup User ID (e.g., STRUP-123456789)
+  userId: string;
   email: string;
   name: string;
   address: Address;
