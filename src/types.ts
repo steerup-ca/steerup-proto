@@ -84,6 +84,45 @@ export interface Campaign {
   }
 }
 
+// Portfolio types
+export interface PortfolioInvestment {
+  id: string;
+  userId: string;
+  selectionId: string;
+  startupId: string;
+  investmentDate: Timestamp;
+  amount: number;
+  type: 'equity' | 'debt';
+  terms: {
+    equity?: {
+      percentageOwned: number;
+      shareClass: string;
+    };
+    debt?: {
+      interestRate: number;
+      maturityDate: Timestamp;
+      paymentSchedule: 'monthly' | 'quarterly' | 'annually';
+    };
+  };
+  status: 'active' | 'exited' | 'defaulted';
+  performance: {
+    currentValue: number;
+    roi: number;
+    lastValuationDate: Timestamp;
+  };
+}
+
+export interface PortfolioSummary {
+  totalInvested: number;
+  totalValue: number;
+  totalRoi: number;
+  investmentCount: number;
+  equityInvestments: number;
+  debtInvestments: number;
+  activeInvestments: number;
+  exitedInvestments: number;
+}
+
 // Updated and new types...
 
 export enum KYCStatus {

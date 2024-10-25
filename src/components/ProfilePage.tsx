@@ -5,6 +5,7 @@ import { doc, getDoc, collection, query, where, getDocs, Timestamp, updateDoc } 
 import { db } from '../firebase';
 import EditProfileModal from './EditProfileModal';
 import AddBankAccountModal from './AddBankAccountModal';
+import { maskAccountNumber } from '../utils/maskUtils';
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -287,7 +288,7 @@ const ProfilePage: React.FC = () => {
                     )}
                   </h3>
                   <InfoItem label="Bank Name" value={account.bankName} />
-                  <InfoItem label="Account Number" value={account.accountNumber} />
+                  <InfoItem label="Account Number" value={maskAccountNumber(account.accountNumber)} />
                   <InfoItem label="Account Type" value={account.accountType} />
                   <button
                     onClick={() => handleSetPrimaryAccount(account.id)}

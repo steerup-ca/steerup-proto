@@ -13,6 +13,7 @@ import LeadInvestorDetailsPage from './components/LeadInvestorDetailsPage';
 import LandingPage from './components/LandingPage';
 import CoInvestPage from './components/CoInvestPage';
 import ProfilePage from './components/ProfilePage';
+import PortfolioPage from './components/PortfolioPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/startup/:id" element={<StartupDetailsPage />} />
           <Route path="/lead-investor/:id" element={<LeadInvestorDetailsPage />} />
           <Route path="/co-invest/:id" element={<CoInvestPage />} />
+          <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin/add-lead-investor" element={<AddLeadInvestorForm />} />
           <Route path="/admin/add-startup" element={<AddStartupForm />} />
