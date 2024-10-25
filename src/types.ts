@@ -2,14 +2,25 @@ import { Timestamp } from 'firebase/firestore';
 
 // Investment Stage Types
 export enum InvestmentStage {
-  INITIATION = 'INITIATION',
-  CONFIRMATION = 'CONFIRMATION',
-  PAYMENT_VALIDATION = 'PAYMENT_VALIDATION',
-  FUNDS_IN_CUSTODY = 'FUNDS_IN_CUSTODY',
-  SHARE_ISSUANCE = 'SHARE_ISSUANCE',
-  FUNDS_TRANSFER = 'FUNDS_TRANSFER',
-  FUND_DEPLOYMENT = 'FUND_DEPLOYMENT',
-  PERFORMANCE_TRACKING = 'PERFORMANCE_TRACKING'
+  PLEDGE = 'PLEDGE',
+  CUSTODIAN = 'CUSTODIAN',
+  CAMPAIGN_SUCCESS = 'CAMPAIGN_SUCCESS',
+  CAMPAIGN_FAILURE = 'CAMPAIGN_FAILURE',
+  FUNDS_INVESTED = 'FUNDS_INVESTED',
+  REFUND = 'REFUND',
+  PERFORMANCE_TRACKING = 'PERFORMANCE_TRACKING',
+  EXIT = 'EXIT'
+}
+
+export interface FundsTransferProgress {
+  totalAmount: number;
+  transferredAmount: number;
+  lastTransferDate: Timestamp;
+  transferHistory: {
+    amount: number;
+    date: Timestamp;
+    description: string;
+  }[];
 }
 
 export interface InvestmentStageDetail {
@@ -18,6 +29,7 @@ export interface InvestmentStageDetail {
   timestamp?: Timestamp;
   message: string;
   details?: string;
+  fundsProgress?: FundsTransferProgress;
 }
 
 export interface InvestmentTracking {
@@ -77,6 +89,18 @@ export interface Startup {
   website: string;
 }
 
+// Additional funding interface that maintains backward compatibility
+export interface AdditionalFunding {
+  name: string;
+  description: string;
+  amount: number;
+  iconUrl?: string;
+  type?: 'organization' | 'individual';
+  id?: string;
+  credentials?: string[];
+  website?: string;
+}
+
 export interface StartupsSelection {
   id: string;
   title: string;
@@ -87,11 +111,7 @@ export interface StartupsSelection {
   currentAmount: number;
   daysLeft: number;
   backersCount: number;
-  additionalFunding: {
-    name: string;
-    description: string;
-    amount: number;
-  }[];
+  additionalFunding: AdditionalFunding[];
 }
 
 export interface Campaign {

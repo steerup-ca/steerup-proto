@@ -13,52 +13,45 @@ const IconWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 // Using consistent Heroicons style
 const stageIcons = {
-  [InvestmentStage.INITIATION]: (
+  [InvestmentStage.PLEDGE]: (
     <IconWrapper>
       <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     </IconWrapper>
   ),
-  [InvestmentStage.CONFIRMATION]: (
-    <IconWrapper>
-      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    </IconWrapper>
-  ),
-  [InvestmentStage.PAYMENT_VALIDATION]: (
-    <IconWrapper>
-      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-      </svg>
-    </IconWrapper>
-  ),
-  [InvestmentStage.FUNDS_IN_CUSTODY]: (
+  [InvestmentStage.CUSTODIAN]: (
     <IconWrapper>
       <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
       </svg>
     </IconWrapper>
   ),
-  [InvestmentStage.SHARE_ISSUANCE]: (
+  [InvestmentStage.CAMPAIGN_SUCCESS]: (
     <IconWrapper>
       <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     </IconWrapper>
   ),
-  [InvestmentStage.FUNDS_TRANSFER]: (
+  [InvestmentStage.CAMPAIGN_FAILURE]: (
+    <IconWrapper>
+      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </IconWrapper>
+  ),
+  [InvestmentStage.FUNDS_INVESTED]: (
     <IconWrapper>
       <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
       </svg>
     </IconWrapper>
   ),
-  [InvestmentStage.FUND_DEPLOYMENT]: (
+  [InvestmentStage.REFUND]: (
     <IconWrapper>
       <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
       </svg>
     </IconWrapper>
   ),
@@ -68,22 +61,55 @@ const stageIcons = {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     </IconWrapper>
+  ),
+  [InvestmentStage.EXIT]: (
+    <IconWrapper>
+      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      </svg>
+    </IconWrapper>
   )
 };
 
 const stageShortNames = {
-  [InvestmentStage.INITIATION]: 'Select',
-  [InvestmentStage.CONFIRMATION]: 'Confirm',
-  [InvestmentStage.PAYMENT_VALIDATION]: 'Verify',
-  [InvestmentStage.FUNDS_IN_CUSTODY]: 'Secure',
-  [InvestmentStage.SHARE_ISSUANCE]: 'Issue',
-  [InvestmentStage.FUNDS_TRANSFER]: 'Transfer',
-  [InvestmentStage.FUND_DEPLOYMENT]: 'Deploy',
-  [InvestmentStage.PERFORMANCE_TRACKING]: 'Track'
+  [InvestmentStage.PLEDGE]: 'Pledge',
+  [InvestmentStage.CUSTODIAN]: 'Custody',
+  [InvestmentStage.CAMPAIGN_SUCCESS]: 'Success',
+  [InvestmentStage.CAMPAIGN_FAILURE]: 'Failed',
+  [InvestmentStage.FUNDS_INVESTED]: 'Investing',
+  [InvestmentStage.REFUND]: 'Refund',
+  [InvestmentStage.PERFORMANCE_TRACKING]: 'Track',
+  [InvestmentStage.EXIT]: 'Exit'
 };
 
 const InvestmentTrackerCondensed: React.FC<InvestmentTrackerCondensedProps> = ({ tracking }) => {
-  const stages = Object.values(InvestmentStage);
+  // Determine which stages to show based on campaign success/failure
+  const getRelevantStages = () => {
+    const hasFailure = tracking.stages.some(s => s.stage === InvestmentStage.CAMPAIGN_FAILURE);
+    const hasSuccess = tracking.stages.some(s => s.stage === InvestmentStage.CAMPAIGN_SUCCESS);
+
+    if (hasFailure) {
+      return [
+        InvestmentStage.PLEDGE,
+        InvestmentStage.CUSTODIAN,
+        InvestmentStage.CAMPAIGN_FAILURE,
+        InvestmentStage.REFUND
+      ];
+    } else if (hasSuccess) {
+      return [
+        InvestmentStage.PLEDGE,
+        InvestmentStage.CUSTODIAN,
+        InvestmentStage.CAMPAIGN_SUCCESS,
+        InvestmentStage.FUNDS_INVESTED,
+        InvestmentStage.PERFORMANCE_TRACKING,
+        InvestmentStage.EXIT
+      ];
+    }
+
+    return [InvestmentStage.PLEDGE, InvestmentStage.CUSTODIAN];
+  };
+
+  const stages = getRelevantStages();
   const currentStageIndex = stages.indexOf(tracking.currentStage);
 
   const getStageStatus = (stage: InvestmentStage) => {

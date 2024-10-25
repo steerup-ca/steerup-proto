@@ -6,14 +6,14 @@ import { useNavigate } from 'react-router-dom';
 
 // Stage names for the status display
 const stageNames: { [key in InvestmentStage]: string } = {
-  [InvestmentStage.INITIATION]: 'Investment Phase',
-  [InvestmentStage.CONFIRMATION]: 'Confirmed',
-  [InvestmentStage.PAYMENT_VALIDATION]: 'Validated',
-  [InvestmentStage.FUNDS_IN_CUSTODY]: 'In Custody',
-  [InvestmentStage.SHARE_ISSUANCE]: 'Share Issuance',
-  [InvestmentStage.FUNDS_TRANSFER]: 'Transfer Phase',
-  [InvestmentStage.FUND_DEPLOYMENT]: 'Deployment',
-  [InvestmentStage.PERFORMANCE_TRACKING]: 'Active'
+  [InvestmentStage.PLEDGE]: 'Pledged',
+  [InvestmentStage.CUSTODIAN]: 'In Custody',
+  [InvestmentStage.CAMPAIGN_SUCCESS]: 'Campaign Successful',
+  [InvestmentStage.CAMPAIGN_FAILURE]: 'Campaign Failed',
+  [InvestmentStage.FUNDS_INVESTED]: 'Funds Being Invested',
+  [InvestmentStage.REFUND]: 'Refund Initiated',
+  [InvestmentStage.PERFORMANCE_TRACKING]: 'Performance Tracking',
+  [InvestmentStage.EXIT]: 'Investment Exited'
 };
 
 const PortfolioPage: React.FC = () => {
@@ -43,32 +43,44 @@ const PortfolioPage: React.FC = () => {
         lastValuationDate: Timestamp.now()
       },
       tracking: {
-        currentStage: InvestmentStage.FUNDS_IN_CUSTODY,
+        currentStage: InvestmentStage.FUNDS_INVESTED,
         lastUpdated: Timestamp.now(),
         stages: [
           {
-            stage: InvestmentStage.INITIATION,
+            stage: InvestmentStage.PLEDGE,
             status: 'completed',
             timestamp: Timestamp.now(),
-            message: 'Investment amount selected: $50,000'
+            message: 'Investment pledged: $50,000'
           },
           {
-            stage: InvestmentStage.CONFIRMATION,
+            stage: InvestmentStage.CUSTODIAN,
             status: 'completed',
             timestamp: Timestamp.now(),
-            message: 'Investment confirmed and payment method verified'
+            message: 'Funds secured in custodian account'
           },
           {
-            stage: InvestmentStage.PAYMENT_VALIDATION,
+            stage: InvestmentStage.CAMPAIGN_SUCCESS,
             status: 'completed',
             timestamp: Timestamp.now(),
-            message: 'Payment processed and identity verified'
+            message: 'Campaign successfully reached its goal'
           },
           {
-            stage: InvestmentStage.FUNDS_IN_CUSTODY,
+            stage: InvestmentStage.FUNDS_INVESTED,
             status: 'active',
             timestamp: Timestamp.now(),
-            message: 'Funds secured in custodian account, preparing share issuance'
+            message: 'Funds transfer in progress (50% complete). Equivalent securities are being purchased as funds are transferred.',
+            fundsProgress: {
+              totalAmount: 50000,
+              transferredAmount: 25000,
+              lastTransferDate: Timestamp.now(),
+              transferHistory: [
+                {
+                  amount: 25000,
+                  date: Timestamp.now(),
+                  description: 'First tranche released with equivalent securities purchased'
+                }
+              ]
+            }
           }
         ]
       }
@@ -97,6 +109,42 @@ const PortfolioPage: React.FC = () => {
         currentStage: InvestmentStage.PERFORMANCE_TRACKING,
         lastUpdated: Timestamp.now(),
         stages: [
+          {
+            stage: InvestmentStage.PLEDGE,
+            status: 'completed',
+            timestamp: Timestamp.now(),
+            message: 'Investment pledged: $25,000'
+          },
+          {
+            stage: InvestmentStage.CUSTODIAN,
+            status: 'completed',
+            timestamp: Timestamp.now(),
+            message: 'Funds secured in custodian account'
+          },
+          {
+            stage: InvestmentStage.CAMPAIGN_SUCCESS,
+            status: 'completed',
+            timestamp: Timestamp.now(),
+            message: 'Campaign successfully reached its goal'
+          },
+          {
+            stage: InvestmentStage.FUNDS_INVESTED,
+            status: 'completed',
+            timestamp: Timestamp.now(),
+            message: 'Funds transfer complete (100%). All equivalent securities have been purchased.',
+            fundsProgress: {
+              totalAmount: 25000,
+              transferredAmount: 25000,
+              lastTransferDate: Timestamp.now(),
+              transferHistory: [
+                {
+                  amount: 25000,
+                  date: Timestamp.now(),
+                  description: 'Full amount transferred with all equivalent securities purchased'
+                }
+              ]
+            }
+          },
           {
             stage: InvestmentStage.PERFORMANCE_TRACKING,
             status: 'active',
@@ -127,14 +175,26 @@ const PortfolioPage: React.FC = () => {
         lastValuationDate: Timestamp.now()
       },
       tracking: {
-        currentStage: InvestmentStage.PERFORMANCE_TRACKING,
+        currentStage: InvestmentStage.CAMPAIGN_FAILURE,
         lastUpdated: Timestamp.now(),
         stages: [
           {
-            stage: InvestmentStage.PERFORMANCE_TRACKING,
+            stage: InvestmentStage.PLEDGE,
+            status: 'completed',
+            timestamp: Timestamp.now(),
+            message: 'Investment pledged: $75,000'
+          },
+          {
+            stage: InvestmentStage.CUSTODIAN,
+            status: 'completed',
+            timestamp: Timestamp.now(),
+            message: 'Funds secured in custodian account'
+          },
+          {
+            stage: InvestmentStage.CAMPAIGN_FAILURE,
             status: 'active',
             timestamp: Timestamp.now(),
-            message: 'Market adjustments impacting valuation, monitoring closely'
+            message: 'Campaign did not reach its goal'
           }
         ]
       }
@@ -153,10 +213,22 @@ const PortfolioPage: React.FC = () => {
   };
 
   // Sample startup data
-  const startupInfo: { [key: string]: { name: string, industry: string }} = {
-    'startup1': { name: 'TechFlow AI', industry: 'Artificial Intelligence' },
-    'startup2': { name: 'GreenEnergy Solutions', industry: 'Clean Technology' },
-    'startup3': { name: 'HealthTech Innovations', industry: 'Healthcare Technology' }
+  const startupInfo: { [key: string]: { name: string, industry: string, securityDocument?: string }} = {
+    'startup1': { 
+      name: 'TechFlow AI', 
+      industry: 'Artificial Intelligence',
+      securityDocument: '/documents/techflow-security.pdf'
+    },
+    'startup2': { 
+      name: 'GreenEnergy Solutions', 
+      industry: 'Clean Technology',
+      securityDocument: '/documents/greenenergy-security.pdf'
+    },
+    'startup3': { 
+      name: 'HealthTech Innovations', 
+      industry: 'Healthcare Technology',
+      securityDocument: '/documents/healthtech-security.pdf'
+    }
   };
 
   const handleInvestmentClick = (investmentId: string) => {
@@ -170,6 +242,49 @@ const PortfolioPage: React.FC = () => {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const renderROI = (investment: PortfolioInvestment) => {
+    const isTrackingStage = investment.tracking.stages.some(
+      s => s.stage === InvestmentStage.PERFORMANCE_TRACKING && s.status !== 'pending'
+    );
+
+    if (!isTrackingStage) {
+      return (
+        <div className="text-[var(--text-color)] text-[var(--font-size-small)] opacity-40">
+          ROI tracking starts after investment
+        </div>
+      );
+    }
+
+    return (
+      <div className={`text-[var(--font-size-small)] font-medium ${
+        investment.performance.roi >= 0 ? 'text-[var(--success-color)]' : 'text-red-500'
+      }`}>
+        {investment.performance.roi > 0 ? '+' : ''}{investment.performance.roi}% ROI
+      </div>
+    );
+  };
+
+  const renderSecurityDocumentLink = (investment: PortfolioInvestment, startupId: string) => {
+    const isFundsInvestedStage = investment.tracking.currentStage === InvestmentStage.FUNDS_INVESTED;
+    const securityDocument = startupInfo[startupId]?.securityDocument;
+
+    if (!isFundsInvestedStage || !securityDocument) return null;
+
+    return (
+      <a
+        href={securityDocument}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-1 bg-[var(--detail-item-bg-color)] text-[var(--text-color)] px-2 py-1 rounded-[var(--button-border-radius)] hover:bg-[var(--primary-color)] hover:text-[var(--button-text-color)] transition-all text-[var(--font-size-xsmall)] border border-[var(--primary-color)] border-opacity-30 mb-2"
+      >
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
+        <span>View Purchased Securities</span>
+      </a>
+    );
   };
 
   return (
@@ -199,7 +314,7 @@ const PortfolioPage: React.FC = () => {
               className="bg-[var(--card-bg-color)] rounded-[var(--border-radius)] p-4 shadow-[var(--box-shadow)]"
             >
               {/* Primary Information */}
-              <div className="flex items-start justify-between mb-6">
+              <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-[var(--text-color)] text-[var(--font-size-medium)] font-bold mb-1">
                     {startupInfo[investment.startupId].name}
@@ -209,19 +324,16 @@ const PortfolioPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right">
+                  {renderSecurityDocumentLink(investment, investment.startupId)}
                   <div className="text-[var(--text-color)] text-[var(--font-size-medium)] font-bold">
-                    ${investment.performance.currentValue.toLocaleString()}
+                    ${investment.amount.toLocaleString()}
                   </div>
-                  <div className={`text-[var(--font-size-small)] font-medium ${
-                    investment.performance.roi >= 0 ? 'text-[var(--success-color)]' : 'text-red-500'
-                  }`}>
-                    {investment.performance.roi > 0 ? '+' : ''}{investment.performance.roi}% ROI
-                  </div>
+                  {renderROI(investment)}
                 </div>
               </div>
 
               {/* Secondary Information */}
-              <div className="grid grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-4 gap-4 mb-6 mt-6">
                 <div className="bg-[var(--detail-item-bg-color)] p-3 rounded-[var(--border-radius)]">
                   <div className="text-[var(--text-color)] text-[var(--font-size-xsmall)] opacity-60 mb-1">
                     Investment
@@ -250,7 +362,7 @@ const PortfolioPage: React.FC = () => {
                   ${currentStageDetail?.status === 'active' ? 
                     'bg-[#9c27b0] bg-opacity-[0.15]' : 
                     'bg-[var(--detail-item-bg-color)]'}`}>
-                  <div className={`text-[var(--font-size-xsmall)] mb-1 ${
+                  <div className={`text-[var-size-xsmall)] mb-1 ${
                     currentStageDetail?.status === 'active' ? 
                     'text-[#9c27b0] opacity-90' : 
                     'text-[var(--text-color)] opacity-60'
@@ -269,7 +381,7 @@ const PortfolioPage: React.FC = () => {
 
               {/* Status Message */}
               {currentStageDetail && (
-                <div className="mb-4 text-[var(--text-color)] text-[var(--font-size-small)] opacity-80">
+                <div className="mb-2 text-[var(--text-color)] text-[var(--font-size-small)] opacity-80">
                   {currentStageDetail.message}
                 </div>
               )}
