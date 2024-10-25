@@ -163,6 +163,15 @@ const PortfolioPage: React.FC = () => {
     navigate(`/portfolio/investment/${investmentId}`);
   };
 
+  const formatDate = (timestamp: Timestamp) => {
+    const date = timestamp.toDate();
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Portfolio Summary */}
@@ -212,7 +221,7 @@ const PortfolioPage: React.FC = () => {
               </div>
 
               {/* Secondary Information */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-4 gap-4 mb-6">
                 <div className="bg-[var(--detail-item-bg-color)] p-3 rounded-[var(--border-radius)]">
                   <div className="text-[var(--text-color)] text-[var(--font-size-xsmall)] opacity-60 mb-1">
                     Investment
@@ -227,6 +236,14 @@ const PortfolioPage: React.FC = () => {
                   </div>
                   <div className="text-[var(--text-color)] font-medium">
                     {investment.terms.equity?.percentageOwned}%
+                  </div>
+                </div>
+                <div className="bg-[var(--detail-item-bg-color)] p-3 rounded-[var(--border-radius)]">
+                  <div className="text-[var(--text-color)] text-[var(--font-size-xsmall)] opacity-60 mb-1">
+                    Date
+                  </div>
+                  <div className="text-[var(--text-color)] font-medium">
+                    {formatDate(investment.investmentDate)}
                   </div>
                 </div>
                 <div className={`p-3 rounded-[var(--border-radius)] transition-all duration-300
