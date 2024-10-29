@@ -237,6 +237,13 @@ const PortfolioPage: React.FC = () => {
     }
   };
 
+  // Calculate sector distribution
+  const sectorDistribution = sampleInvestments.reduce((acc: { [key: string]: number }, investment) => {
+    const sector = startupInfo[investment.startupId].industry;
+    acc[sector] = (acc[sector] || 0) + investment.amount;
+    return acc;
+  }, {});
+
   const handleInvestmentClick = (investmentId: string) => {
     navigate(`/portfolio/investment/${investmentId}`);
   };
@@ -299,17 +306,82 @@ const PortfolioPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Portfolio Summary */}
-      <div className="bg-[var(--card-bg-color)] rounded-[var(--border-radius)] p-4 mb-4 shadow-[var(--box-shadow)] md:hidden">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-[var(--text-color)] text-[var(--font-size-large)] font-bold">Portfolio</h1>
-          <span className="text-[var(--text-color)] text-[var(--font-size-large)] font-bold">
-            ${portfolioSummary.totalValue.toLocaleString()}
-          </span>
-        </div>
-        <div className="flex justify-between text-[var(--text-color)] text-[var(--font-size-small)]">
-          <span>ROI: {portfolioSummary.totalRoi.toFixed(1)}%</span>
-          <span>{portfolioSummary.activeInvestments} Active</span>
+      {/* Portfolio Summary Dashboard */}
+      <div className="bg-[var(--card-bg-color)] rounded-[var(--border-radius)] p-6 mb-8 shadow-[var(--box-shadow)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Total Value & ROI */}
+          <div className="bg-[var(--detail-item-bg-color)] p-4 rounded-[var(--border-radius)]">
+            <h3 className="text-[var(--text-color)] text-[var(--font-size-small)] opacity-60 mb-2">Portfolio Value</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[var(--text-color)] text-[var(--font-size-xlarge)] font-bold">
+                ${portfolioSummary.totalValue.toLocaleString()}
+              </span>
+              <span className={`text-[var(--font-size-small)] font-medium ${
+                portfolioSummary.totalRoi >= 0 ? 'text-[var(--success-color)]' : 'text-red-500'
+              }`}>
+                {portfolioSummary.totalRoi > 0 ? '+' : ''}{portfolioSummary.totalRoi.toFixed(2)}%
+              </span>
+            </div>
+            <div className="text-[var(--text-color)] text-[var(--font-size-small)] opacity-60 mt-1">
+              Initial Investment: ${portfolioSummary.totalInvested.toLocaleString()}
+            </div>
+          </div>
+
+          {/* Investment Distribution */}
+          <div className="bg-[var(--detail-item-bg-color)] p-4 rounded-[var(--border-radius)]">
+            <h3 className="text-[var(--text-color)] text-[var(--font-size-small)] opacity-60 mb-2">Investment Mix</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-[var(--text-color)] text-[var(--font-size-medium)] font-bold">
+                  {portfolioSummary.equityInvestments}
+                </div>
+                <div className="text-[var(--text-color)] text-[var(--font-size-small)] opacity-60">Equity</div>
+              </div>
+              <div>
+                <div className="text-[var(--text-color)] text-[var(--font-size-medium)] font-bold">
+                  {portfolioSummary.debtInvestments}
+                </div>
+                <div className="text-[var(--text-color)] text-[var(--font-size-small)] opacity-60">Debt</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sector Distribution */}
+          <div className="bg-[var(--detail-item-bg-color)] p-4 rounded-[var(--border-radius)]">
+            <h3 className="text-[var(--text-color)] text-[var(--font-size-small)] opacity-60 mb-2">Sector Allocation</h3>
+            <div className="space-y-2">
+              {Object.entries(sectorDistribution).map(([sector, amount]) => (
+                <div key={sector} className="flex justify-between items-center">
+                  <span className="text-[var(--text-color)] text-[var(--font-size-small)]">{sector}</span>
+                  <span className="text-[var(--text-color)] text-[var(--font-size-small)] font-medium">
+                    {((amount / portfolioSummary.totalInvested) * 100).toFixed(1)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Investment Status */}
+          <div className="bg-[var(--detail-item-bg-color)] p-4 rounded-[var(--border-radius)]">
+            <h3 className="text-[var(--text-color)] text-[var(--font-size-small)] opacity-60 mb-2">Portfolio Status</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-[var(--text-color)] text-[var(--font-size-medium)] font-bold">
+                  {portfolioSummary.activeInvestments}
+                </div>
+                <div className="text-[var(--text-color)] text-[var(--font-size-small)] opacity-60">Active</div>
+              </div>
+              <div>
+                <div className="text-[var(--text-color)] text-[var(--font-size-medium)] font-bold">
+                  {portfolioSummary.exitedInvestments}
+                </div>
+                <div className="text-[var(--text-color)] text-[var(--font-size-small)] opacity-60">Exited</div>
+              </div>
+            </div>
+            <div className="mt-2 text-[var(--text-color)] text-[var(--font-size-small)] opacity-60">
+              {portfolioSummary.investmentCount} Total Investments
+            </div>
+          </div>
         </div>
       </div>
 
@@ -404,39 +476,6 @@ const PortfolioPage: React.FC = () => {
             </div>
           );
         })}
-      </div>
-
-      {/* Investment Distribution */}
-      <div className="bg-[var(--card-bg-color)] rounded-[var(--border-radius)] p-4 my-6 shadow-[var(--box-shadow)]">
-        <h2 className="text-[var(--text-color)] text-[var(--font-size-medium)] font-bold mb-3">
-          Investment Distribution
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-[var(--detail-item-bg-color)] p-3 rounded-[var(--border-radius)]">
-            <span className="text-[var(--text-color)] text-[var(--font-size-small)]">Equity</span>
-            <p className="text-[var(--text-color)] font-bold">{portfolioSummary.equityInvestments}</p>
-          </div>
-          <div className="bg-[var(--detail-item-bg-color)] p-3 rounded-[var(--border-radius)]">
-            <span className="text-[var(--text-color)] text-[var(--font-size-small)]">Debt</span>
-            <p className="text-[var(--text-color)] font-bold">{portfolioSummary.debtInvestments}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Regulatory Information */}
-      <div className="bg-[var(--card-bg-color)] rounded-[var(--border-radius)] p-[var(--spacing-large)] shadow-[var(--box-shadow)]">
-        <h2 className="text-[var(--text-color)] text-[var(--font-size-large)] font-bold mb-[var(--spacing-medium)]">
-          Regulatory Information
-        </h2>
-        
-        <div className="bg-[var(--detail-item-bg-color)] p-4 rounded-[var(--border-radius)]">
-          <p className="text-[var(--text-color)] text-[var(--font-size-small)] mb-2">
-            All investments are made in accordance with National Instrument 45-110 - Start-up Crowdfunding Registration and Prospectus Exemptions.
-          </p>
-          <p className="text-[var(--text-color)] text-[var(--font-size-small)]">
-            Investment limits and restrictions apply based on your investor status. Please ensure you understand the risks and limitations before making investment decisions.
-          </p>
-        </div>
       </div>
 
       {/* Security Document Modal */}
