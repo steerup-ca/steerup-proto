@@ -12,6 +12,64 @@ export enum InvestmentStage {
   EXIT = 'EXIT'
 }
 
+// KYC Types
+export enum KYCFormStep {
+  PERSONAL_INFO = 'PERSONAL_INFO',
+  IDENTITY_VERIFICATION = 'IDENTITY_VERIFICATION',
+  FINANCIAL_INFO = 'FINANCIAL_INFO',
+  INVESTMENT_EXPERIENCE = 'INVESTMENT_EXPERIENCE',
+  RISK_ASSESSMENT = 'RISK_ASSESSMENT',
+  REVIEW = 'REVIEW'
+}
+
+export interface KYCProgress {
+  currentStep: KYCFormStep;
+  completedSteps: KYCFormStep[];
+  lastUpdated: Timestamp;
+}
+
+export interface KYCData {
+  id: string;
+  userId: string;
+  status: KYCStatus;
+  progress: KYCProgress;
+  submissionDate?: Timestamp;
+  expiryDate?: Timestamp;
+  lastReviewDate?: Timestamp;
+  personalInfo: {
+    dateOfBirth: string;
+    nationality: string;
+    occupation: string;
+    employerName?: string;
+    taxResidency: string;
+    taxIdentificationNumber?: string;
+  };
+  identityVerification: {
+    documentType: 'passport' | 'drivers_license' | 'national_id';
+    documentNumber: string;
+    documentExpiryDate: string;
+    documentImageUrls: string[];
+    verificationStatus: 'pending' | 'verified' | 'rejected';
+  };
+  financialInfo: {
+    annualIncome: string;
+    sourceOfFunds: string;
+    netWorth: string;
+    expectedInvestmentRange: string;
+  };
+  investmentExperience: {
+    privateEquityExperience: boolean;
+    yearsInvesting: number;
+    previousInvestmentTypes: string[];
+    averageInvestmentSize: string;
+  };
+  riskAssessment: {
+    riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+    investmentHorizon: string;
+    investmentObjectives: string[];
+  };
+}
+
 export interface FundsTransferProgress {
   totalAmount: number;
   transferredAmount: number;
@@ -171,7 +229,8 @@ export interface PortfolioSummary {
 export enum KYCStatus {
   Verified = 'Verified',
   Pending = 'Pending',
-  NotVerified = 'Not Verified'
+  NotVerified = 'Not Verified',
+  NeedsReview = 'Needs Review'
 }
 
 export enum AccreditationStatus {
@@ -210,6 +269,9 @@ export interface User {
   totalInvestments: number;
   bankAccounts: BankAccount[];
   primaryBankAccountId: string | null;
+  kycData?: KYCData;
+  kycLastCompletedDate?: Timestamp;
+  kycNextReviewDate?: Timestamp;
 }
 
 export interface Investment {

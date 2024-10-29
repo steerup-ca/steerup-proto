@@ -14,6 +14,8 @@ import LandingPage from './components/LandingPage';
 import CoInvestPage from './components/CoInvestPage';
 import ProfilePage from './components/ProfilePage';
 import PortfolioPage from './components/PortfolioPage';
+import KYCFlow from './components/KYC/KYCFlow';
+import KYCSuccess from './components/KYC/KYCSuccess';
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
           <Route path="/co-invest/:id" element={<CoInvestPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/kyc" element={<KYCFlow />} />
+          <Route path="/kyc/success" element={<KYCSuccess />} />
           <Route path="/admin/add-lead-investor" element={<AddLeadInvestorForm />} />
           <Route path="/admin/add-startup" element={<AddStartupForm />} />
           <Route path="/admin/add-startups-selection" element={<AddStartupsSelectionForm />} />
