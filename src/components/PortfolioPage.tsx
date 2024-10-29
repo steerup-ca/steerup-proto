@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PortfolioInvestment, PortfolioSummary, InvestmentStage } from '../types';
 import InvestmentTimeline from './InvestmentTimeline';
+import SecurityDocumentModal from './SecurityDocumentModal';
 import { Timestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,6 +19,11 @@ const stageNames: { [key in InvestmentStage]: string } = {
 
 const PortfolioPage: React.FC = () => {
   const [showDetails, setShowDetails] = useState(false);
+  const [selectedSecurity, setSelectedSecurity] = useState<{
+    isOpen: boolean;
+    url?: string;
+    startupName?: string;
+  }>({ isOpen: false });
   const navigate = useNavigate();
 
   // Sample investments for demonstration
@@ -267,23 +273,27 @@ const PortfolioPage: React.FC = () => {
   };
 
   const renderSecurityDocumentLink = (investment: PortfolioInvestment, startupId: string) => {
-    const isFundsInvestedStage = investment.tracking.currentStage === InvestmentStage.FUNDS_INVESTED;
+    const isFundsInvestedOrTracking = investment.tracking.currentStage === InvestmentStage.FUNDS_INVESTED || 
+                                     investment.tracking.currentStage === InvestmentStage.PERFORMANCE_TRACKING;
     const securityDocument = startupInfo[startupId]?.securityDocument;
+    const startupName = startupInfo[startupId]?.name;
 
-    if (!isFundsInvestedStage || !securityDocument) return null;
+    if (!isFundsInvestedOrTracking || !securityDocument) return null;
 
     return (
-      <a
-        href={securityDocument}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        onClick={() => setSelectedSecurity({ 
+          isOpen: true, 
+          url: securityDocument,
+          startupName: startupName
+        })}
         className="flex items-center gap-1 bg-[var(--detail-item-bg-color)] text-[var(--text-color)] px-2 py-1 rounded-[var(--button-border-radius)] hover:bg-[var(--primary-color)] hover:text-[var(--button-text-color)] transition-all text-[var(--font-size-xsmall)] border border-[var(--primary-color)] border-opacity-30 mb-2"
       >
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
         </svg>
         <span>View Purchased Securities</span>
-      </a>
+      </button>
     );
   };
 
@@ -428,6 +438,14 @@ const PortfolioPage: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Security Document Modal */}
+      <SecurityDocumentModal
+        isOpen={selectedSecurity.isOpen}
+        onClose={() => setSelectedSecurity({ isOpen: false })}
+        documentUrl={selectedSecurity.url || ''}
+        startupName={selectedSecurity.startupName || ''}
+      />
     </div>
   );
 };
