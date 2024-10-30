@@ -1,14 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { StartupsSelection, Campaign, Startup, LeadInvestor, Investment, AdditionalFundingEntity } from '../types';
+import { 
+  StartupsSelection, 
+  Campaign, 
+  Startup, 
+  LeadInvestor, 
+  Investment, 
+  AdditionalFundingEntity, 
+  User,
+  KYCStatus,
+  AccreditationStatus
+} from '../types';
 import { doc, getDoc, addDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import InvestmentModal from './InvestmentModal';
+import InvestmentAllocationModal from './InvestmentAllocationModal';
+import InvestmentAllocationChart from './InvestmentAllocationChart';
+import '../styles/DetailPage.css';
 
 const CoInvestPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [investmentAmount, setInvestmentAmount] = useState<string>('');
   const [selection, setSelection] = useState<StartupsSelection | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [startups, setStartups] = useState<Startup[]>([]);
@@ -16,8 +28,33 @@ const CoInvestPage: React.FC = () => {
   const [fundingEntities, setFundingEntities] = useState<Record<string, AdditionalFundingEntity>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isAllocationModalOpen, setIsAllocationModalOpen] = useState<boolean>(false);
+  const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState<boolean>(false);
+  const [investmentAmount, setInvestmentAmount] = useState<number>(0);
   const [modalStatus, setModalStatus] = useState<'processing' | 'completed' | 'failed'>('processing');
+  
+  // Mock user data
+  const mockUser: User = {
+    id: 'mock-user-id',
+    userId: 'mock-user-id',
+    email: 'mock@example.com',
+    name: 'Mock User',
+    address: {
+      street: '123 Mock St',
+      city: 'Mock City',
+      provinceState: 'Mock State',
+      postalCodeZip: '12345',
+      country: 'Mock Country'
+    },
+    kycStatus: KYCStatus.Verified,
+    memberSince: Timestamp.now(),
+    accreditationStatus: AccreditationStatus.NotAccredited,
+    yearlyInvestmentLimit: 100000,
+    investedThisYear: 0,
+    totalInvestments: 0,
+    bankAccounts: [],
+    primaryBankAccountId: null
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,41 +123,26 @@ const CoInvestPage: React.FC = () => {
     fetchData();
   }, [id]);
 
-  const handleInvestmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === '' || /^\d+$/.test(value)) {
-      setInvestmentAmount(value);
-    }
-  };
-
-  const handlePresetAmount = (amount: number) => {
-    setInvestmentAmount(amount.toString());
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsModalOpen(true);
+  const handleInvestmentSubmit = async (amount: number) => {
+    setInvestmentAmount(amount);
+    setIsAllocationModalOpen(false);
+    setIsInvestmentModalOpen(true);
     setModalStatus('processing');
 
     try {
-      // Simulate a delay
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       if (id && selection) {
-        const amount = parseInt(investmentAmount);
-        
-        // Add the investment to the database
         const newInvestment: Omit<Investment, 'id'> = {
           date: Timestamp.now(),
           amount: amount,
           selectionId: id,
-          userId: 'current-user-id', // Replace with actual user ID when authentication is implemented
+          userId: mockUser.id,
           status: 'completed'
         };
 
         const docRef = await addDoc(collection(db, 'investments'), newInvestment);
 
-        // Update the local state to reflect the investment
         setSelection(prevSelection => {
           if (prevSelection) {
             return {
@@ -139,13 +161,6 @@ const CoInvestPage: React.FC = () => {
     } catch (error) {
       console.error('Error processing investment:', error);
       setModalStatus('failed');
-    }
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    if (modalStatus === 'completed') {
-      navigate('/');
     }
   };
 
@@ -170,84 +185,55 @@ const CoInvestPage: React.FC = () => {
       <h1 className="text-4xl font-bold mb-8 text-center text-primary-color">{selection.title}</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column: Investment Form, Summary, and Additional Funding */}
+        {/* Left Column: Investment Summary and Additional Funding */}
         <div className="space-y-8">
           {/* Investment Form */}
           <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden">
             <div className="p-6">
               <h2 className="text-2xl font-semibold mb-4 text-primary-color">Make Your Investment</h2>
               <p className="mb-4">By co-investing, you'll receive equity proportional to your investment amount in these startups.</p>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label htmlFor="investmentAmount" className="block text-sm font-medium mb-2">
-                    Investment Amount ($)
-                  </label>
-                  <input
-                    type="text"
-                    id="investmentAmount"
-                    value={investmentAmount}
-                    onChange={handleInvestmentChange}
-                    className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-color"
-                    required
-                    pattern="\d*"
-                    inputMode="numeric"
-                    placeholder="Enter amount"
-                    style={{
-                      backgroundColor: '#ffffff',
-                      color: '#000000',
-                      border: '1px solid #4a5568',
-                    }}
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {[500, 1000, 5000, 10000].map((amount) => (
-                    <button
-                      key={amount}
-                      type="button"
-                      onClick={() => handlePresetAmount(amount)}
-                      className="bg-secondary-color text-button-text-color py-1 px-3 rounded-full hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-opacity-50 transition duration-200"
-                    >
-                      ${amount.toLocaleString()}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-primary-color text-button-text-color py-2 px-4 rounded-full hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-opacity-50 transition duration-200"
-                  style={{
-                    backgroundColor: 'var(--primary-color)',
-                    color: 'var(--button-text-color)',
-                    borderRadius: 'var(--button-border-radius)',
-                  }}
-                >
-                  Confirm Co-investment
-                </button>
-              </form>
+              <button
+                onClick={() => setIsAllocationModalOpen(true)}
+                className="w-full bg-primary-color text-button-text-color py-3 px-6 rounded-full hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-opacity-50 transition duration-200 text-lg font-semibold"
+                style={{
+                  backgroundColor: 'var(--primary-color)',
+                  color: 'var(--button-text-color)',
+                  borderRadius: 'var(--button-border-radius)',
+                }}
+              >
+                Start Co-investment
+              </button>
             </div>
           </div>
 
           {/* Investment Summary */}
           <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden">
-            <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-4 text-primary-color">Investment Summary</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-detail-item-bg-color p-4 rounded-lg text-center">
-                  <h4 className="text-sm font-semibold mb-1">Total Raised</h4>
-                  <p className="text-2xl font-bold text-primary-color">${selection.currentAmount.toLocaleString()}</p>
+            <div className="p-4">
+              <div className="mb-6">
+                <div className="grid grid-cols-4 text-center mb-1">
+                  <div className="text-sm opacity-60">Total Raised</div>
+                  <div className="text-sm opacity-60">Goal</div>
+                  <div className="text-sm opacity-60">Backers</div>
+                  <div className="text-sm opacity-60">Days Left</div>
                 </div>
-                <div className="bg-detail-item-bg-color p-4 rounded-lg text-center">
-                  <h4 className="text-sm font-semibold mb-1">Backers</h4>
-                  <p className="text-2xl font-bold text-primary-color">{selection.backersCount}</p>
-                </div>
-                <div className="bg-detail-item-bg-color p-4 rounded-lg text-center">
-                  <h4 className="text-sm font-semibold mb-1">Days Left</h4>
-                  <p className="text-2xl font-bold text-primary-color">{selection.daysLeft}</p>
-                </div>
-                <div className="bg-detail-item-bg-color p-4 rounded-lg text-center">
-                  <h4 className="text-sm font-semibold mb-1">Goal</h4>
-                  <p className="text-2xl font-bold text-primary-color">${selection.goal.toLocaleString()}</p>
+                <div className="grid grid-cols-4 text-center">
+                  <div className="text-primary-color font-bold text-lg">${selection.currentAmount.toLocaleString()}</div>
+                  <div className="text-primary-color font-bold text-lg">${selection.goal.toLocaleString()}</div>
+                  <div className="text-primary-color font-bold text-lg">{selection.backersCount}</div>
+                  <div className="text-primary-color font-bold text-lg">{selection.daysLeft}</div>
                 </div>
               </div>
+
+              {/* Allocation Chart */}
+              {selection.startupProportions && (
+                <div className="mt-4">
+                  <InvestmentAllocationChart
+                    startups={startups}
+                    proportions={selection.startupProportions}
+                    campaigns={campaigns}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -286,13 +272,41 @@ const CoInvestPage: React.FC = () => {
           {/* Startups Section */}
           <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden">
             <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-4 text-primary-color">Featured Startups</h2>
-              <div className="space-y-4">
+              <h2 className="text-2xl font-semibold mb-6 text-primary-color">Featured Startups</h2>
+              <div className="space-y-6">
                 {startups.map((startup) => (
-                  <div key={startup.id} className="bg-detail-item-bg-color p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-1">{startup.name}</h3>
-                    <p className="text-sm mb-2">{startup.description}</p>
-                    <p className="text-xs">Founded: {startup.foundedYear} | {startup.location}</p>
+                  <div key={startup.id} className="bg-detail-item-bg-color rounded-lg overflow-hidden">
+                    <div className="p-5">
+                      <div className="flex items-center mb-3">
+                        {startup.imageUrl && (
+                          <img 
+                            src={startup.imageUrl} 
+                            alt={startup.name} 
+                            className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-primary-color"
+                          />
+                        )}
+                        <div>
+                          <h3 className="text-xl font-semibold mb-1">{startup.name}</h3>
+                          <div className="flex items-center text-sm text-gray-400">
+                            <span className="mr-3">Founded: {startup.foundedYear}</span>
+                            <span>{startup.location}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <p className="text-sm mb-4">{startup.description}</p>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="bg-card-bg-color p-2 rounded">
+                          <span className="block text-gray-400">Industry</span>
+                          <span className="font-semibold">{startup.industry}</span>
+                        </div>
+                        <div className="bg-card-bg-color p-2 rounded">
+                          <span className="block text-gray-400">Team Size</span>
+                          <span className="font-semibold">{startup.teamSize} members</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -305,13 +319,28 @@ const CoInvestPage: React.FC = () => {
               <div className="p-6">
                 <h2 className="text-2xl font-semibold mb-4 text-primary-color">Selection Lead</h2>
                 <div className="flex items-center mb-4">
-                  <img src={selectionLead.photo} alt={selectionLead.name} className="w-16 h-16 rounded-full mr-4" />
+                  <img src={selectionLead.photo} alt={selectionLead.name} className="w-16 h-16 rounded-full mr-4 border-2 border-primary-color" />
                   <div>
                     <p className="font-semibold text-lg">{selectionLead.name}</p>
-                    <p className="text-sm">{selectionLead.title} at {selectionLead.company}</p>
+                    <p className="text-sm text-gray-400">{selectionLead.title} at {selectionLead.company}</p>
                   </div>
                 </div>
-                <p className="text-sm mb-4">{selectionLead.bio}</p>
+                <p className="text-sm mb-4 leading-relaxed">{selectionLead.bio}</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectionLead.areasOfExpertise.map((area, index) => (
+                    <span 
+                      key={index}
+                      className="px-3 py-1 text-xs rounded-full"
+                      style={{
+                        backgroundColor: 'var(--primary-color)',
+                        opacity: 0.8,
+                        color: 'var(--button-text-color)'
+                      }}
+                    >
+                      {area}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -320,17 +349,37 @@ const CoInvestPage: React.FC = () => {
 
       {/* Prospectus Link */}
       <div className="mt-8 text-center">
-        <Link to={`/prospectus/${id}`} className="text-link-color hover:text-primary-color underline">
+        <Link 
+          to={`/prospectus/${id}`} 
+          className="inline-flex items-center justify-center px-6 py-3 rounded-full text-white hover:opacity-90 transition-opacity"
+          style={{
+            backgroundColor: 'var(--primary-color)',
+            color: 'var(--button-text-color)',
+            boxShadow: '0 4px 6px rgba(142, 68, 173, 0.2)'
+          }}
+        >
           View Full Prospectus
         </Link>
       </div>
 
-      {/* Investment Modal */}
+      {/* Investment Allocation Modal */}
+      {selection && (
+        <InvestmentAllocationModal
+          isOpen={isAllocationModalOpen}
+          onClose={() => setIsAllocationModalOpen(false)}
+          onProceed={handleInvestmentSubmit}
+          user={mockUser}
+          selection={selection}
+          campaigns={campaigns}
+        />
+      )}
+
+      {/* Investment Processing Modal */}
       <InvestmentModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        isOpen={isInvestmentModalOpen}
+        onClose={() => setIsInvestmentModalOpen(false)}
         status={modalStatus}
-        amount={parseInt(investmentAmount) || 0}
+        amount={investmentAmount}
       />
     </div>
   );

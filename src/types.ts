@@ -12,6 +12,25 @@ export enum InvestmentStage {
   EXIT = 'EXIT'
 }
 
+// Investment Allocation Constants and Types
+export const INVESTMENT_LIMITS = {
+  PLATFORM_MINIMUM: 500,
+  NON_ACCREDITED_MAX_PER_STARTUP: 2500,
+} as const;
+
+export interface SecurityAllocation {
+  startupId: string;
+  proportion: number;
+  maxPrice: number;
+  securityPrice: number;
+  maxSecurities: number;
+}
+
+export interface AllocationValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
 // KYC Types
 export enum KYCFormStep {
   PERSONAL_INFO = 'PERSONAL_INFO',
@@ -96,7 +115,6 @@ export interface InvestmentTracking {
   lastUpdated: Timestamp;
 }
 
-// Existing types...
 export interface InvestmentHistoryItem {
   companyName: string;
   amount: number;
@@ -147,12 +165,11 @@ export interface Startup {
   website: string;
 }
 
-// Split AdditionalFunding into two interfaces
 export interface AdditionalFundingEntity {
   id: string;
   name: string;
   description: string;
-  label: string; // e.g., "Government Investment Bank", "Private Investment Fund"
+  label: string;
   iconUrl?: string;
   type: 'organization' | 'individual';
   credentials?: string[];
@@ -162,7 +179,12 @@ export interface AdditionalFundingEntity {
 export interface CampaignAdditionalFunding {
   entityId: string;
   amount: number;
-  isLocked?: boolean; // Made optional to maintain compatibility
+  isLocked?: boolean;
+}
+
+export interface StartupProportion {
+  campaignId: string;
+  proportion: number;
 }
 
 export interface StartupsSelection {
@@ -171,6 +193,7 @@ export interface StartupsSelection {
   description?: string;
   selectionLead: string;
   campaigns: string[];
+  startupProportions: StartupProportion[];  // New field for startup proportions
   goal: number;
   currentAmount: number;
   daysLeft: number;
