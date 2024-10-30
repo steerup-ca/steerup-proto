@@ -28,7 +28,6 @@ const AddStartupsSelectionForm: React.FC = () => {
   });
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [proportionError, setProportionError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,43 +85,22 @@ const AddStartupsSelectionForm: React.FC = () => {
   const handleCampaignsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCampaignIds = Array.from(e.target.selectedOptions, option => option.value);
     const selectedCampaigns = availableCampaigns.filter(campaign => selectedCampaignIds.includes(campaign.id));
-    const newGoal = selectedCampaigns.reduce((sum, campaign) => sum + campaign.steerup_amount, 0);
-
-    // Initialize proportions for selected campaigns with equal distribution
-    const defaultProportion = selectedCampaignIds.length > 0 ? 100 / selectedCampaignIds.length : 0;
-    const newProportions: StartupProportion[] = selectedCampaignIds.map(campaignId => ({
-      campaignId,
-      proportion: defaultProportion
+    
+    // Calculate total steerup_amount for all selected campaigns
+    const totalAmount = selectedCampaigns.reduce((sum, campaign) => sum + campaign.steerup_amount, 0);
+    
+    // Calculate proportions based on each campaign's steerup_amount relative to total
+    const newProportions: StartupProportion[] = selectedCampaigns.map(campaign => ({
+      campaignId: campaign.id,
+      proportion: (campaign.steerup_amount / totalAmount) * 100
     }));
 
     setStartupsSelection(prev => ({
       ...prev,
       campaigns: selectedCampaignIds,
       startupProportions: newProportions,
-      goal: newGoal,
+      goal: totalAmount,
     }));
-  };
-
-  const handleProportionChange = (campaignId: string, value: string) => {
-    const newProportion = parseFloat(value);
-    if (isNaN(newProportion)) return;
-
-    setStartupsSelection(prev => {
-      const newProportions = prev.startupProportions.map(p =>
-        p.campaignId === campaignId ? { ...p, proportion: newProportion } : p
-      );
-      return {
-        ...prev,
-        startupProportions: newProportions
-      };
-    });
-  };
-
-  const validateProportions = (): boolean => {
-    const sum = startupsSelection.startupProportions.reduce((acc, curr) => acc + curr.proportion, 0);
-    const isValid = Math.abs(sum - 100) < 0.01; // Allow for small floating point differences
-    setProportionError(isValid ? '' : 'Investment proportions must sum to 100%');
-    return isValid;
   };
 
   const handleNewFundingChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -154,10 +132,6 @@ const AddStartupsSelectionForm: React.FC = () => {
     e.preventDefault();
     setSuccessMessage('');
     setErrorMessage('');
-
-    if (!validateProportions()) {
-      return;
-    }
 
     try {
       const docRef = await addDoc(collection(db, 'startupsSelections'), startupsSelection);
@@ -198,7 +172,6 @@ const AddStartupsSelectionForm: React.FC = () => {
       
       {successMessage && <div className="success-message">{successMessage}</div>}
       {errorMessage && <div className="error-message">{errorMessage}</div>}
-      {proportionError && <div className="error-message">{proportionError}</div>}
 
       <div className="form-group">
         <label htmlFor="title">Title</label>
@@ -254,24 +227,16 @@ const AddStartupsSelectionForm: React.FC = () => {
 
       {startupsSelection.campaigns.length > 0 && (
         <div className="form-group">
-          <label>Investment Proportions</label>
-          <p className="form-instruction">Set the investment proportion for each startup (total must be 100%)</p>
+          <label>Investment Proportions (Computed from Campaign Amounts)</label>
+          <p className="form-instruction">These proportions are automatically calculated based on each campaign's funding amount</p>
           {startupsSelection.startupProportions.map((proportion) => {
             const campaign = availableCampaigns.find(c => c.id === proportion.campaignId);
             const startup = campaign ? startups[campaign.startupId] : null;
             return (
-              <div key={proportion.campaignId} className="proportion-input flex items-center gap-4 mb-2">
+              <div key={proportion.campaignId} className="proportion-display flex items-center gap-4 mb-2">
                 <span className="flex-grow">{startup?.name || 'Unknown Startup'}</span>
-                <input
-                  type="number"
-                  value={proportion.proportion}
-                  onChange={(e) => handleProportionChange(proportion.campaignId, e.target.value)}
-                  step="0.1"
-                  min="0"
-                  max="100"
-                  className="form-input w-24"
-                />
-                <span>%</span>
+                <span className="text-right w-24">{proportion.proportion.toFixed(2)}%</span>
+                <span className="text-right w-32">${campaign?.steerup_amount.toLocaleString()}</span>
               </div>
             );
           })}
