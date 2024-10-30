@@ -139,6 +139,7 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
                 <li><Link to="/admin/add-startup" className="block px-4 py-2 text-sm text-white hover:bg-primary">Add Startup</Link></li>
                 <li><Link to="/admin/add-startups-selection" className="block px-4 py-2 text-sm text-white hover:bg-primary">Add Startups Selection</Link></li>
                 <li><Link to="/admin/add-campaign" className="block px-4 py-2 text-sm text-white hover:bg-primary">Add Campaign</Link></li>
+                <li><Link to="/admin/add-additional-funding-entity" className="block px-4 py-2 text-sm text-white hover:bg-primary">Add Additional Funding Entity</Link></li>
               </ul>
             )}
           </li>
@@ -217,6 +218,7 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
                 <li><Link to="/admin/add-startup" style={{ display: 'block', padding: '0.5rem 0', color: 'var(--text-color)', textDecoration: 'none', fontSize: 'var(--font-size-small)' }} onClick={toggleSideMenu}>Add Startup</Link></li>
                 <li><Link to="/admin/add-startups-selection" style={{ display: 'block', padding: '0.5rem 0', color: 'var(--text-color)', textDecoration: 'none', fontSize: 'var(--font-size-small)' }} onClick={toggleSideMenu}>Add Startups Selection</Link></li>
                 <li><Link to="/admin/add-campaign" style={{ display: 'block', padding: '0.5rem 0', color: 'var(--text-color)', textDecoration: 'none', fontSize: 'var(--font-size-small)' }} onClick={toggleSideMenu}>Add Campaign</Link></li>
+                <li><Link to="/admin/add-additional-funding-entity" style={{ display: 'block', padding: '0.5rem 0', color: 'var(--text-color)', textDecoration: 'none', fontSize: 'var(--font-size-small)' }} onClick={toggleSideMenu}>Add Additional Funding Entity</Link></li>
               </ul>
             )}
           </li>

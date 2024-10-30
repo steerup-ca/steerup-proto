@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { StartupsSelection, LeadInvestor, Startup, Investment, Campaign } from '../types';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { StartupsSelection, LeadInvestor, Startup, Investment, Campaign, AdditionalFundingEntity } from '../types';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 interface StartupsSelectionCardProps {
@@ -14,11 +14,13 @@ interface StartupsSelectionCardProps {
 const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection, leadInvestor, startups, campaigns }) => {
   const [totalRaised, setTotalRaised] = useState<number>(0);
   const [backersCount, setBackersCount] = useState<number>(0);
+  const [fundingEntities, setFundingEntities] = useState<Record<string, AdditionalFundingEntity>>({});
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchInvestmentData = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch investment data
         const investmentsQuery = query(collection(db, 'investments'), where('selectionId', '==', selection.id));
         const investmentsSnap = await getDocs(investmentsQuery);
         const investments = investmentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Investment);
@@ -28,13 +30,26 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
 
         setTotalRaised(total);
         setBackersCount(uniqueBackers);
+
+        // Fetch additional funding entities
+        const entityIds = selection.additionalFunding.map(f => f.entityId);
+        const entities: Record<string, AdditionalFundingEntity> = {};
+        
+        for (const entityId of entityIds) {
+          const entityDoc = await getDoc(doc(db, 'additionalFundingEntities', entityId));
+          if (entityDoc.exists()) {
+            entities[entityId] = { id: entityDoc.id, ...entityDoc.data() } as AdditionalFundingEntity;
+          }
+        }
+        
+        setFundingEntities(entities);
       } catch (error) {
-        console.error('Error fetching investment data:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchInvestmentData();
-  }, [selection.id]);
+    fetchData();
+  }, [selection.id, selection.additionalFunding]);
 
   const progressPercentage = (totalRaised / selection.goal) * 100;
 
@@ -105,12 +120,56 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
 
         <div>
           <h3 className="text-base font-semibold mb-2 text-gray-300">ADDITIONAL FUNDING</h3>
-          {selection.additionalFunding.map((funding, index) => (
-            <div key={index} className="bg-gray-800/50 rounded-lg p-3 flex justify-between items-center mb-2">
-              <span className="text-white">{funding.name}</span>
-              <span className="text-green-500">${funding.amount.toLocaleString()}</span>
-            </div>
-          ))}
+          <div className="space-y-2">
+            {selection.additionalFunding.map((funding) => {
+              const entity = fundingEntities[funding.entityId];
+              return entity ? (
+                <div 
+                  key={funding.entityId} 
+                  className="rounded-lg p-3 flex items-center justify-between"
+                  style={{ backgroundColor: 'var(--additional-funding-bg-color)' }}
+                >
+                  <div className="flex items-center flex-grow">
+                    <div className="relative w-10 h-10 flex items-center justify-center rounded-lg" style={{ backgroundColor: 'var(--card-bg-color)' }}>
+                      {entity.iconUrl && (
+                        <img 
+                          src={entity.iconUrl} 
+                          alt={entity.name} 
+                          className="w-9 h-9 object-contain"
+                        />
+                      )}
+                      {funding.isLocked && (
+                        <div 
+                          className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: 'var(--primary-color)' }}
+                        >
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-3">
+                      <div className="flex items-center">
+                        <span className="text-white font-medium">{entity.name}</span>
+                      </div>
+                      <span 
+                        className="text-sm block text-gray-300"
+                      >
+                        {entity.label}
+                      </span>
+                    </div>
+                  </div>
+                  <span 
+                    className="ml-4 font-medium"
+                    style={{ color: 'var(--success-color)' }}
+                  >
+                    ${funding.amount.toLocaleString()}
+                  </span>
+                </div>
+              ) : null;
+            })}
+          </div>
         </div>
       </div>
     </div>

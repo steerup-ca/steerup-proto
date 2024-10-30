@@ -147,16 +147,22 @@ export interface Startup {
   website: string;
 }
 
-// Additional funding interface that maintains backward compatibility
-export interface AdditionalFunding {
+// Split AdditionalFunding into two interfaces
+export interface AdditionalFundingEntity {
+  id: string;
   name: string;
   description: string;
-  amount: number;
+  label: string; // e.g., "Government Investment Bank", "Private Investment Fund"
   iconUrl?: string;
-  type?: 'organization' | 'individual';
-  id?: string;
+  type: 'organization' | 'individual';
   credentials?: string[];
   website?: string;
+}
+
+export interface CampaignAdditionalFunding {
+  entityId: string;
+  amount: number;
+  isLocked?: boolean; // Made optional to maintain compatibility
 }
 
 export interface StartupsSelection {
@@ -169,7 +175,7 @@ export interface StartupsSelection {
   currentAmount: number;
   daysLeft: number;
   backersCount: number;
-  additionalFunding: AdditionalFunding[];
+  additionalFunding: CampaignAdditionalFunding[];
 }
 
 export interface Campaign {
@@ -184,7 +190,8 @@ export interface Campaign {
     equity: number;
     valuation: number;
     offeringDocument: string;
-  }
+  };
+  additionalFunding: CampaignAdditionalFunding[];
 }
 
 export interface PortfolioInvestment {

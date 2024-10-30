@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import { db } from '../firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
-import { StartupsSelection, LeadInvestor, Campaign, Startup } from '../types';
+import { StartupsSelection, LeadInvestor, Campaign, Startup, AdditionalFundingEntity, CampaignAdditionalFunding } from '../types';
 import '../styles/forms.css';
 
 const AddStartupsSelectionForm: React.FC = () => {
@@ -20,6 +20,11 @@ const AddStartupsSelectionForm: React.FC = () => {
   const [leadInvestors, setLeadInvestors] = useState<{ [id: string]: LeadInvestor }>({});
   const [availableCampaigns, setAvailableCampaigns] = useState<Campaign[]>([]);
   const [startups, setStartups] = useState<{ [id: string]: Startup }>({});
+  const [additionalFundingEntities, setAdditionalFundingEntities] = useState<AdditionalFundingEntity[]>([]);
+  const [newFunding, setNewFunding] = useState<CampaignAdditionalFunding>({
+    entityId: '',
+    amount: 0
+  });
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -53,6 +58,11 @@ const AddStartupsSelectionForm: React.FC = () => {
           return acc;
         }, {} as { [id: string]: Startup });
         setStartups(startupsData);
+
+        // Fetch additional funding entities
+        const fundingSnapshot = await getDocs(collection(db, 'additionalFundingEntities'));
+        const fundingEntities = fundingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AdditionalFundingEntity));
+        setAdditionalFundingEntities(fundingEntities);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -83,42 +93,38 @@ const AddStartupsSelectionForm: React.FC = () => {
     }));
   };
 
-  const handleAdditionalFundingChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNewFundingChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setStartupsSelection(prev => {
-      const newAdditionalFunding = [...prev.additionalFunding];
-      newAdditionalFunding[index] = { 
-        ...newAdditionalFunding[index], 
-        [name]: name === 'amount' ? Number(value) : value 
-      };
-      return { ...prev, additionalFunding: newAdditionalFunding };
-    });
-  };
-
-  const addAdditionalFunding = () => {
-    setStartupsSelection(prev => ({
+    setNewFunding(prev => ({
       ...prev,
-      additionalFunding: [...prev.additionalFunding, { name: '', description: '', amount: 0 }],
+      [name]: name === 'amount' ? Number(value) : value
     }));
   };
 
-  const removeAdditionalFunding = (index: number) => {
+  const handleAddFunding = () => {
+    if (newFunding.entityId && newFunding.amount > 0) {
+      setStartupsSelection(prev => ({
+        ...prev,
+        additionalFunding: [...prev.additionalFunding, newFunding]
+      }));
+      setNewFunding({ entityId: '', amount: 0 });
+    }
+  };
+
+  const handleRemoveFunding = (entityId: string) => {
     setStartupsSelection(prev => ({
       ...prev,
-      additionalFunding: prev.additionalFunding.filter((_, i) => i !== index),
+      additionalFunding: prev.additionalFunding.filter(f => f.entityId !== entityId)
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted. Attempting to add startups selection to Firestore...');
     setSuccessMessage('');
     setErrorMessage('');
 
     try {
-      console.log('Connecting to Firestore...');
       const docRef = await addDoc(collection(db, 'startupsSelections'), startupsSelection);
-      console.log('Document written with ID: ', docRef.id);
       setSuccessMessage('Startups Selection added successfully!');
       // Reset form fields
       setStartupsSelection({
@@ -131,7 +137,6 @@ const AddStartupsSelectionForm: React.FC = () => {
         backersCount: 0,
         additionalFunding: [],
       });
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error adding document: ', error);
@@ -255,39 +260,49 @@ const AddStartupsSelectionForm: React.FC = () => {
 
       <div className="form-group">
         <h3>Additional Funding</h3>
-        {startupsSelection.additionalFunding.map((funding, index) => (
-          <div key={index} className="additional-funding-item">
-            <input
-              type="text"
-              name="name"
-              value={funding.name}
-              onChange={(e) => handleAdditionalFundingChange(index, e)}
-              placeholder="Funding Name"
-              required
-              className="form-input"
-            />
-            <input
-              type="text"
-              name="description"
-              value={funding.description}
-              onChange={(e) => handleAdditionalFundingChange(index, e)}
-              placeholder="Description"
-              required
-              className="form-input"
-            />
-            <input
-              type="number"
-              name="amount"
-              value={funding.amount}
-              onChange={(e) => handleAdditionalFundingChange(index, e)}
-              placeholder="Amount"
-              required
-              className="form-input"
-            />
-            <Button onClick={() => removeAdditionalFunding(index)} className="remove-btn">Remove Funding</Button>
-          </div>
-        ))}
-        <Button onClick={addAdditionalFunding} className="add-btn">Add Additional Funding</Button>
+        {startupsSelection.additionalFunding.map((funding) => {
+          const entity = additionalFundingEntities.find(e => e.id === funding.entityId);
+          return entity ? (
+            <div key={funding.entityId} className="funding-item flex items-center mb-2">
+              <span>{entity.name}: ${funding.amount.toLocaleString()}</span>
+              <div className="ml-auto">
+                <Button 
+                  onClick={() => handleRemoveFunding(funding.entityId)}
+                  className="remove-btn px-2 py-1"
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ) : null;
+        })}
+        
+        <div className="add-funding flex gap-4 mt-4">
+          <select
+            name="entityId"
+            value={newFunding.entityId}
+            onChange={handleNewFundingChange}
+            className="form-input flex-grow"
+          >
+            <option value="">Select Additional Funding Entity</option>
+            {additionalFundingEntities.map((entity) => (
+              <option key={entity.id} value={entity.id}>
+                {entity.name}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            name="amount"
+            value={newFunding.amount}
+            onChange={handleNewFundingChange}
+            placeholder="Amount"
+            className="form-input w-32"
+          />
+          <Button onClick={handleAddFunding} className="add-btn w-32">
+            Add Funding
+          </Button>
+        </div>
       </div>
 
       <Button type="submit" className="submit-btn">Add Startups Selection</Button>

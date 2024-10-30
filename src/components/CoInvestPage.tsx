@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { StartupsSelection, Campaign, Startup, LeadInvestor, Investment } from '../types';
+import { StartupsSelection, Campaign, Startup, LeadInvestor, Investment, AdditionalFundingEntity } from '../types';
 import { doc, getDoc, addDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import InvestmentModal from './InvestmentModal';
@@ -13,6 +13,7 @@ const CoInvestPage: React.FC = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [startups, setStartups] = useState<Startup[]>([]);
   const [selectionLead, setSelectionLead] = useState<LeadInvestor | null>(null);
+  const [fundingEntities, setFundingEntities] = useState<Record<string, AdditionalFundingEntity>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -22,13 +23,14 @@ const CoInvestPage: React.FC = () => {
     const fetchData = async () => {
       if (id) {
         try {
-          // Fetch selection, campaigns, startups, and selection lead
+          // Fetch selection
           const selectionRef = doc(db, 'startupsSelections', id);
           const selectionSnap = await getDoc(selectionRef);
           if (selectionSnap.exists()) {
             const selectionData = { id: selectionSnap.id, ...selectionSnap.data() } as StartupsSelection;
             setSelection(selectionData);
 
+            // Fetch campaigns
             const campaignPromises = selectionData.campaigns.map(campaignId => 
               getDoc(doc(db, 'campaigns', campaignId))
             );
@@ -38,6 +40,7 @@ const CoInvestPage: React.FC = () => {
               .map(snap => ({ id: snap.id, ...snap.data() }) as Campaign);
             setCampaigns(campaignsData);
 
+            // Fetch startups
             const startupIds = campaignsData.map(campaign => campaign.startupId);
             const startupPromises = startupIds.map(startupId => 
               getDoc(doc(db, 'startups', startupId))
@@ -48,6 +51,7 @@ const CoInvestPage: React.FC = () => {
               .map(snap => ({ id: snap.id, ...snap.data() }) as Startup);
             setStartups(startupsData);
 
+            // Fetch selection lead
             if (selectionData.selectionLead) {
               const leadRef = doc(db, 'leadInvestors', selectionData.selectionLead);
               const leadSnap = await getDoc(leadRef);
@@ -55,6 +59,19 @@ const CoInvestPage: React.FC = () => {
                 setSelectionLead({ id: leadSnap.id, ...leadSnap.data() } as LeadInvestor);
               }
             }
+
+            // Fetch additional funding entities
+            const entityIds = selectionData.additionalFunding.map(f => f.entityId);
+            const entities: Record<string, AdditionalFundingEntity> = {};
+            
+            for (const entityId of entityIds) {
+              const entityDoc = await getDoc(doc(db, 'additionalFundingEntities', entityId));
+              if (entityDoc.exists()) {
+                entities[entityId] = { id: entityDoc.id, ...entityDoc.data() } as AdditionalFundingEntity;
+              }
+            }
+            
+            setFundingEntities(entities);
           } else {
             setError('Selection not found');
           }
@@ -239,12 +256,26 @@ const CoInvestPage: React.FC = () => {
             <div className="p-6">
               <h2 className="text-2xl font-semibold mb-4 text-primary-color">Additional Funding</h2>
               <ul className="space-y-2">
-                {selection.additionalFunding.map((funding, index) => (
-                  <li key={index} className="bg-detail-item-bg-color p-3 rounded-lg">
-                    <span className="font-semibold">{funding.name}</span>: {funding.description}
-                    <span className="block mt-1 text-primary-color font-bold">${funding.amount.toLocaleString()}</span>
-                  </li>
-                ))}
+                {selection.additionalFunding.map((funding) => {
+                  const entity = fundingEntities[funding.entityId];
+                  return entity ? (
+                    <li key={funding.entityId} className="bg-detail-item-bg-color p-3 rounded-lg">
+                      <div className="flex items-center mb-2">
+                        {entity.iconUrl && (
+                          <img src={entity.iconUrl} alt={entity.name} className="w-6 h-6 rounded-full mr-2" />
+                        )}
+                        <div>
+                          <span className="font-semibold">{entity.name}</span>
+                          <span className="text-sm text-gray-400 block">{entity.label}</span>
+                        </div>
+                      </div>
+                      <p className="text-sm">{entity.description}</p>
+                      <span className="block mt-1 text-primary-color font-bold">
+                        ${funding.amount.toLocaleString()}
+                      </span>
+                    </li>
+                  ) : null;
+                })}
               </ul>
             </div>
           </div>

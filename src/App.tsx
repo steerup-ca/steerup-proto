@@ -7,6 +7,7 @@ import AddLeadInvestorForm from './components/AddLeadInvestorForm';
 import AddStartupForm from './components/AddStartupForm';
 import AddStartupsSelectionForm from './components/AddStartupsSelectionForm';
 import AddCampaignForm from './components/AddCampaignForm';
+import AddAdditionalFundingEntityForm from './components/AddAdditionalFundingEntityForm';
 import ExplorePage from './components/ExplorePage';
 import StartupDetailsPage from './components/StartupDetailsPage';
 import LeadInvestorDetailsPage from './components/LeadInvestorDetailsPage';
@@ -37,6 +38,7 @@ function App() {
           <Route path="/admin/add-startup" element={<AddStartupForm />} />
           <Route path="/admin/add-startups-selection" element={<AddStartupsSelectionForm />} />
           <Route path="/admin/add-campaign" element={<AddCampaignForm />} />
+          <Route path="/admin/add-additional-funding-entity" element={<AddAdditionalFundingEntityForm />} />
         </Routes>
       </div>
     </HashRouter>
