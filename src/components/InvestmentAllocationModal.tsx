@@ -4,11 +4,13 @@ import {
   StartupsSelection, 
   Campaign, 
   SecurityAllocation,
-  AllocationValidationResult
+  AllocationValidationResult,
+  Startup
 } from '../types';
 import {
   validateInvestmentAllocations,
-  calculateInvestmentAllocations
+  calculateInvestmentAllocations,
+  calculateMinimumViableInvestment
 } from '../utils/investmentAllocation';
 
 interface InvestmentAllocationModalProps {
@@ -18,6 +20,7 @@ interface InvestmentAllocationModalProps {
   user: User;
   selection: StartupsSelection;
   campaigns: Campaign[];
+  startups: Startup[];
 }
 
 const InvestmentAllocationModal: React.FC<InvestmentAllocationModalProps> = ({
@@ -26,26 +29,45 @@ const InvestmentAllocationModal: React.FC<InvestmentAllocationModalProps> = ({
   onProceed,
   user,
   selection,
-  campaigns
+  campaigns,
+  startups
 }) => {
-  const [amount, setAmount] = useState<number>(500);
+  const minimumInvestment = calculateMinimumViableInvestment(campaigns, selection);
+  const [amount, setAmount] = useState<number>(minimumInvestment);
   const [allocations, setAllocations] = useState<SecurityAllocation[]>([]);
   const [validationResult, setValidationResult] = useState<AllocationValidationResult>({ 
     isValid: false, 
     errors: [] 
   });
 
+  // Update allocations and validation whenever amount changes
   useEffect(() => {
-    if (amount) {
-      const validation = validateInvestmentAllocations(user, selection, campaigns, amount);
-      setValidationResult(validation);
-      
-      if (validation.isValid) {
-        const newAllocations = calculateInvestmentAllocations(user, selection, campaigns, amount);
-        setAllocations(newAllocations);
-      }
+    const validation = validateInvestmentAllocations(user, selection, campaigns, amount);
+    setValidationResult(validation);
+    
+    if (validation.isValid) {
+      const newAllocations = calculateInvestmentAllocations(user, selection, campaigns, amount);
+      setAllocations(newAllocations);
+    } else {
+      setAllocations([]);
     }
   }, [amount, user, selection, campaigns]);
+
+  // Helper function to get startup name
+  const getStartupName = (startupId: string): string => {
+    const startup = startups.find(s => s.id === startupId);
+    return startup ? startup.name : startupId;
+  };
+
+  // Calculate total actual investment based on whole securities
+  const totalActualInvestment = allocations.reduce((sum, a) => sum + a.maxPrice, 0);
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newAmount = Number(e.target.value);
+    if (!isNaN(newAmount)) {
+      setAmount(newAmount);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -56,15 +78,33 @@ const InvestmentAllocationModal: React.FC<InvestmentAllocationModalProps> = ({
         <div className="p-8">
           <h2 className="text-3xl font-bold mb-6 text-primary-color">Investment Allocation</h2>
           
+          {/* Minimum Investment Info */}
+          <div className="mb-6 p-4 bg-secondary-bg-color rounded-lg">
+            <h3 className="text-lg font-semibold mb-2">Minimum Investment Required</h3>
+            <p className="text-sm mb-2">
+              The minimum investment for this selection is ${minimumInvestment.toLocaleString()}.
+            </p>
+            <p className="text-sm opacity-75">
+              This amount covers the minimum security price for each startup in the selection:
+            </p>
+            <ul className="text-sm mt-2 space-y-1 opacity-75">
+              {campaigns.map(campaign => (
+                <li key={campaign.id}>
+                  • {getStartupName(campaign.startupId)}: ${campaign.offeringDetails.minAmount.toLocaleString()} per security
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Investment Amount Input */}
           <div className="mb-6">
             <label className="block text-lg mb-2">Investment Amount ($)</label>
             <input
               type="number"
-              min="500"
+              min={minimumInvestment}
               step="100"
               value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+              onChange={handleAmountChange}
               className="w-full p-3 border rounded-lg bg-input-bg-color text-lg"
               style={{
                 borderColor: 'var(--border-color)',
@@ -78,9 +118,15 @@ const InvestmentAllocationModal: React.FC<InvestmentAllocationModalProps> = ({
             <div className="mb-6 p-4 bg-red-100 rounded-lg">
               <h3 className="text-red-700 font-semibold mb-2">Validation Errors:</h3>
               <ul className="list-disc pl-5">
-                {validationResult.errors.map((error, index) => (
-                  <li key={index} className="text-red-600">{error}</li>
-                ))}
+                {validationResult.errors.map((error, index) => {
+                  // Replace startup IDs with names in error messages
+                  let errorMessage = error;
+                  campaigns.forEach(campaign => {
+                    const startupName = getStartupName(campaign.startupId);
+                    errorMessage = errorMessage.replace(campaign.startupId, startupName);
+                  });
+                  return <li key={index} className="text-red-600">{errorMessage}</li>;
+                })}
               </ul>
             </div>
           )}
@@ -92,20 +138,32 @@ const InvestmentAllocationModal: React.FC<InvestmentAllocationModalProps> = ({
               <div className="space-y-4">
                 {allocations.map((allocation) => {
                   const campaign = campaigns.find(c => c.startupId === allocation.startupId);
+                  const startupName = getStartupName(allocation.startupId);
+                  const targetProportion = campaign ? (campaign.steerup_amount / selection.goal) * 100 : 0;
+                  const actualProportion = (allocation.maxPrice / totalActualInvestment) * 100;
+
                   return (
                     <div key={allocation.startupId} className="p-4 bg-secondary-bg-color rounded-lg">
-                      <h4 className="font-semibold">{campaign?.startupId}</h4>
-                      <div className="grid grid-cols-2 gap-2 mt-2">
-                        <div>Proportion:</div>
-                        <div>{(allocation.proportion * 100).toFixed(1)}%</div>
-                        <div>Amount:</div>
-                        <div>${allocation.maxPrice.toFixed(2)}</div>
+                      <h4 className="font-semibold">{startupName}</h4>
+                      <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                        <div>Target Proportion:</div>
+                        <div>{targetProportion.toFixed(1)}%</div>
+                        <div>Actual Proportion:</div>
+                        <div>{actualProportion.toFixed(1)}%</div>
                         <div>Securities:</div>
-                        <div>{allocation.maxSecurities} @ ${allocation.securityPrice}</div>
+                        <div>{allocation.maxSecurities.toLocaleString()} @ ${allocation.securityPrice.toLocaleString()}</div>
+                        <div>Total Amount:</div>
+                        <div>${allocation.maxPrice.toLocaleString()}</div>
                       </div>
                     </div>
                   );
                 })}
+                <div className="p-4 bg-primary-color bg-opacity-10 rounded-lg">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="font-semibold">Total Investment:</div>
+                    <div className="font-semibold">${totalActualInvestment.toLocaleString()}</div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

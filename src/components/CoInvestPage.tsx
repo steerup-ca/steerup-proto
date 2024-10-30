@@ -371,6 +371,7 @@ const CoInvestPage: React.FC = () => {
           user={mockUser}
           selection={selection}
           campaigns={campaigns}
+          startups={startups}
         />
       )}
 

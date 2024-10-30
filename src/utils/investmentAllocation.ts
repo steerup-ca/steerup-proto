@@ -9,6 +9,23 @@ import {
 } from '../types';
 
 /**
+ * Calculate minimum viable investment that allows buying whole securities
+ * while maintaining proportions as closely as possible
+ */
+export function calculateMinimumViableInvestment(
+  campaigns: Campaign[],
+  selection: StartupsSelection
+): number {
+  // Sum of minimum security prices for each campaign
+  const minTotal = campaigns.reduce((sum, campaign) => {
+    return sum + campaign.offeringDetails.minAmount;
+  }, 0);
+
+  // Ensure it's at least the platform minimum
+  return Math.max(minTotal, INVESTMENT_LIMITS.PLATFORM_MINIMUM);
+}
+
+/**
  * Calculate maximum security price based on proportion and investor type
  */
 export function calculateMaxSecurityPrice(
@@ -23,9 +40,9 @@ export function calculateMaxSecurityPrice(
 }
 
 /**
- * Calculate maximum number of securities that can be purchased
+ * Calculate number of whole securities that can be purchased
  */
-export function calculateMaxSecurities(maxPrice: number, securityPrice: number): number {
+export function calculateSecurities(maxPrice: number, securityPrice: number): number {
   return Math.floor(maxPrice / securityPrice);
 }
 
@@ -63,50 +80,26 @@ export function validateInvestmentAllocations(
     return totalValidation;
   }
 
-  // Calculate proportions and validate allocations
-  let totalProportion = 0;
-  const allocations: SecurityAllocation[] = [];
+  // Calculate remaining investment after ensuring minimum securities
+  let remainingInvestment = totalInvestment;
+  const totalAmount = selection.goal;
 
-  campaigns.forEach((campaign) => {
-    // Calculate proportion based on campaign amount relative to total selection goal
-    const proportion = campaign.steerup_amount / selection.goal;
-    totalProportion += proportion;
-
-    const maxPrice = calculateMaxSecurityPrice(
-      totalInvestment,
-      proportion,
-      isAccredited
-    );
-
+  // First pass: ensure minimum one security for each campaign
+  for (const campaign of campaigns) {
     const securityPrice = campaign.offeringDetails.minAmount;
-    const maxSecurities = calculateMaxSecurities(maxPrice, securityPrice);
+    remainingInvestment -= securityPrice;
 
     // Validate non-accredited investor limits
-    if (!isAccredited && maxPrice > INVESTMENT_LIMITS.NON_ACCREDITED_MAX_PER_STARTUP) {
+    if (!isAccredited && securityPrice > INVESTMENT_LIMITS.NON_ACCREDITED_MAX_PER_STARTUP) {
       errors.push(
-        `Allocation for startup ${campaign.startupId} exceeds non-accredited investor limit of $${INVESTMENT_LIMITS.NON_ACCREDITED_MAX_PER_STARTUP}`
+        `Investment in startup ${campaign.startupId} exceeds non-accredited investor limit of $${INVESTMENT_LIMITS.NON_ACCREDITED_MAX_PER_STARTUP}`
       );
     }
+  }
 
-    // Validate minimum security purchase
-    if (maxSecurities < 1) {
-      errors.push(
-        `Allocation for startup ${campaign.startupId} is insufficient to purchase at least one security`
-      );
-    }
-
-    allocations.push({
-      startupId: campaign.startupId,
-      proportion,
-      maxPrice,
-      securityPrice,
-      maxSecurities,
-    });
-  });
-
-  // Validate total proportion
-  if (Math.abs(totalProportion - 1) > 0.0001) { // Using small epsilon for floating point comparison
-    errors.push('Campaign allocations must sum to 100%');
+  // Validate remaining amount is non-negative
+  if (remainingInvestment < 0) {
+    errors.push(`Total investment must be at least $${totalInvestment - remainingInvestment}`);
   }
 
   return {
@@ -124,24 +117,37 @@ export function calculateInvestmentAllocations(
   campaigns: Campaign[],
   totalInvestment: number
 ): SecurityAllocation[] {
-  const isAccredited = user.accreditationStatus === AccreditationStatus.Accredited;
+  const totalAmount = selection.goal;
+  let remainingInvestment = totalInvestment;
   
-  return campaigns.map((campaign) => {
-    const proportion = campaign.steerup_amount / selection.goal;
-    const maxPrice = calculateMaxSecurityPrice(
-      totalInvestment,
-      proportion,
-      isAccredited
-    );
+  // First pass: allocate minimum one security to each campaign
+  const allocations = campaigns.map((campaign) => {
+    const proportion = campaign.steerup_amount / totalAmount;
     const securityPrice = campaign.offeringDetails.minAmount;
-    const maxSecurities = calculateMaxSecurities(maxPrice, securityPrice);
+    remainingInvestment -= securityPrice;
 
     return {
       startupId: campaign.startupId,
       proportion,
-      maxPrice,
+      maxPrice: securityPrice,
       securityPrice,
-      maxSecurities,
+      maxSecurities: 1,
     };
   });
+
+  // Second pass: allocate remaining investment based on proportions
+  if (remainingInvestment > 0) {
+    for (const allocation of allocations) {
+      const campaign = campaigns.find(c => c.startupId === allocation.startupId)!;
+      const targetProportion = campaign.steerup_amount / totalAmount;
+      const targetAmount = remainingInvestment * targetProportion;
+      const additionalSecurities = Math.floor(targetAmount / allocation.securityPrice);
+      
+      allocation.maxSecurities += additionalSecurities;
+      allocation.maxPrice += additionalSecurities * allocation.securityPrice;
+      remainingInvestment -= additionalSecurities * allocation.securityPrice;
+    }
+  }
+
+  return allocations;
 }
