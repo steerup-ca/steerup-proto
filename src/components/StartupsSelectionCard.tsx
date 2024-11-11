@@ -57,6 +57,20 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
     navigate(`/co-invest/${selection.id}`);
   };
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: selection.title,
+        text: `Check out this investment opportunity: ${selection.title}`,
+        url: window.location.href
+      }).catch((error) => console.log('Error sharing:', error));
+    }
+  };
+
+  const handleAdditionalFundingClick = (entityId: string) => {
+    navigate(`/additional-funding/${entityId}`);
+  };
+
   return (
     <div className="rounded-lg overflow-hidden shadow-lg" style={{
       background: 'linear-gradient(to bottom, #3a4a5c, #1f2937)'
@@ -111,12 +125,32 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
           </div>
         </div>
 
-        <button 
-          onClick={handleCoInvest}
-          className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold mb-6 hover:bg-purple-700 transition-colors duration-200 text-lg"
-        >
-          Co-invest
-        </button>
+        <div className="flex gap-2 mb-6">
+          <button 
+            onClick={handleCoInvest}
+            className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors duration-200 text-lg"
+            style={{
+              backgroundColor: 'var(--primary-color)',
+              color: 'var(--button-text-color)',
+              borderRadius: 'var(--border-radius)'
+            }}
+          >
+            Co-invest
+          </button>
+          <button
+            onClick={handleShare}
+            className="aspect-square bg-purple-600 text-white p-3 rounded-lg hover:bg-purple-700 transition-colors duration-200"
+            style={{
+              backgroundColor: 'var(--primary-color)',
+              color: 'var(--button-text-color)',
+              borderRadius: 'var(--border-radius)'
+            }}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          </button>
+        </div>
 
         <div>
           <h3 className="text-base font-semibold mb-2 text-gray-300">ADDITIONAL FUNDING</h3>
@@ -126,11 +160,12 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
               return entity ? (
                 <div 
                   key={funding.entityId} 
-                  className="rounded-lg p-3 flex items-center justify-between"
+                  className="rounded-lg py-1 px-1.5 flex items-center justify-between cursor-pointer hover:opacity-90 transition-opacity"
                   style={{ backgroundColor: 'var(--additional-funding-bg-color)' }}
+                  onClick={() => handleAdditionalFundingClick(funding.entityId)}
                 >
                   <div className="flex items-center flex-grow">
-                    <div className="relative w-10 h-10 flex items-center justify-center rounded-lg" style={{ backgroundColor: 'var(--card-bg-color)' }}>
+                    <div className="relative w-10 h-10 flex items-center justify-center rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--card-bg-color)' }}>
                       {entity.iconUrl && (
                         <img 
                           src={entity.iconUrl} 
@@ -149,7 +184,7 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
                         </div>
                       )}
                     </div>
-                    <div className="ml-3">
+                    <div className="ml-2">
                       <div className="flex items-center">
                         <span className="text-white font-medium">{entity.name}</span>
                       </div>

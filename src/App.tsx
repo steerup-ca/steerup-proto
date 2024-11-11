@@ -11,6 +11,7 @@ import AddAdditionalFundingEntityForm from './components/AddAdditionalFundingEnt
 import ExplorePage from './components/ExplorePage';
 import StartupDetailsPage from './components/StartupDetailsPage';
 import LeadInvestorDetailsPage from './components/LeadInvestorDetailsPage';
+import AdditionalFundingDetailPage from './components/AdditionalFundingDetailPage';
 import LandingPage from './components/LandingPage';
 import CoInvestPage from './components/CoInvestPage';
 import ProfilePage from './components/ProfilePage';
@@ -31,6 +32,7 @@ function App() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/startup/:id" element={<StartupDetailsPage />} />
           <Route path="/lead-investor/:id" element={<LeadInvestorDetailsPage />} />
+          <Route path="/additional-funding/:id" element={<AdditionalFundingDetailPage />} />
           <Route path="/co-invest/:id" element={<CoInvestPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/profile" element={<ProfilePage />} />
