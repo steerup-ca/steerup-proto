@@ -84,7 +84,7 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
             </Link>
           </li>
           <li>
-            <Link to="/portfolio" style={{
+            <Link to="/pricing" style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -93,8 +93,8 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
               fontSize: 'var(--font-size-xsmall)',
               padding: '0.5rem'
             }}>
-              <span className="material-icons" style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>account_balance</span>
-              <span>Portfolio</span>
+              <span className="material-icons" style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>payments</span>
+              <span>Pricing</span>
             </Link>
           </li>
           <li>
@@ -123,6 +123,7 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
         <ul className="flex items-center h-16 px-4">
           <li className="mr-6"><Link to="/home" className="text-white">Home</Link></li>
           <li className="mr-6"><Link to="/explore" className="text-white">Explore</Link></li>
+          <li className="mr-6"><Link to="/pricing" className="text-white">Pricing</Link></li>
           <li className="mr-6"><Link to="/portfolio" className="text-white">Portfolio</Link></li>
           <li className="mr-6">
             <Link to="/kyc" className="text-white flex items-center">
@@ -182,6 +183,18 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
             }} onClick={toggleSideMenu}>
               <span className="material-icons" style={{ marginRight: '0.5rem' }}>person</span>
               Profile
+            </Link>
+          </li>
+          <li>
+            <Link to="/pricing" style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0.75rem 1rem',
+              color: 'var(--text-color)',
+              textDecoration: 'none'
+            }} onClick={toggleSideMenu}>
+              <span className="material-icons" style={{ marginRight: '0.5rem' }}>payments</span>
+              Pricing
             </Link>
           </li>
           <li>

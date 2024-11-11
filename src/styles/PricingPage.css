@@ -1,0 +1,134 @@
+.pricing-container {
+  padding: var(--spacing-large);
+  max-width: 1200px;
+  margin: 0 auto;
+  color: var(--text-color);
+}
+
+.pricing-title {
+  text-align: center;
+  font-size: var(--font-size-xlarge);
+  margin-bottom: var(--spacing-large);
+  color: var(--text-color);
+}
+
+.pricing-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-large);
+  padding: var(--spacing-medium);
+}
+
+.pricing-card {
+  background-color: var(--card-bg-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-large);
+  box-shadow: var(--box-shadow);
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.pricing-card:hover {
+  transform: translateY(-5px);
+}
+
+.pricing-card.featured {
+  border: 2px solid var(--primary-color);
+}
+
+.featured-label {
+  position: absolute;
+  top: -12px;
+  right: var(--spacing-large);
+  background-color: var(--primary-color);
+  color: var(--button-text-color);
+  padding: 4px var(--spacing-medium);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-small);
+}
+
+.pricing-card h2 {
+  color: var(--primary-color);
+  font-size: var(--font-size-large);
+  margin-bottom: var(--spacing-medium);
+}
+
+.price-range {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-medium);
+}
+
+.investment-range {
+  font-size: var(--font-size-large);
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.per-year {
+  font-size: var(--font-size-small);
+  color: var(--secondary-color);
+}
+
+.annual-fee {
+  text-align: center;
+  margin-bottom: var(--spacing-large);
+  padding: var(--spacing-medium);
+  background-color: var(--detail-item-bg-color);
+  border-radius: var(--border-radius);
+}
+
+.fee-amount {
+  font-size: var(--font-size-xlarge);
+  font-weight: bold;
+  color: var(--success-color);
+  display: block;
+}
+
+.fee-type {
+  font-size: var(--font-size-small);
+  color: var(--secondary-color);
+}
+
+.additional-fees {
+  margin-top: var(--spacing-small);
+  font-size: var(--font-size-xsmall);
+  color: var(--secondary-color);
+}
+
+.additional-fees p {
+  margin: var(--spacing-small) 0;
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.features-list li {
+  padding: var(--spacing-small) 0;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.features-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--success-color);
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .pricing-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .pricing-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
