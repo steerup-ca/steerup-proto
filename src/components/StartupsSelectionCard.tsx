@@ -161,7 +161,7 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
               borderRadius: 'var(--border-radius)'
             }}
           >
-            Co-invest
+            {isDebt ? 'Co-lend' : 'Co-invest'}
           </button>
           <button
             onClick={handleShare}

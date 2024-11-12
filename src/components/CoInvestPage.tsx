@@ -9,7 +9,8 @@ import {
   AdditionalFundingEntity, 
   User,
   KYCStatus,
-  AccreditationStatus
+  AccreditationStatus,
+  InvestmentType
 } from '../types';
 import { doc, getDoc, addDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -180,6 +181,22 @@ const CoInvestPage: React.FC = () => {
     return <div className="text-center text-2xl mt-10 text-text-color">Selection not found</div>;
   }
 
+  const getInvestmentDescription = () => {
+    if (selection.investmentType === InvestmentType.EQUITY) {
+      return "By co-investing, you'll receive equity proportional to your investment amount in these startups.";
+    } else {
+      return "By co-lending, you'll receive returns proportional to your investment amount in these startups.";
+    }
+  };
+
+  const getButtonText = () => {
+    if (selection.investmentType === InvestmentType.EQUITY) {
+      return "Start Co-investment";
+    } else {
+      return "Start Co-lending";
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 bg-background-color text-text-color">
       <h1 className="text-4xl font-bold mb-8 text-center text-primary-color">{selection.title}</h1>
@@ -191,7 +208,7 @@ const CoInvestPage: React.FC = () => {
           <div className="bg-card-bg-color shadow-xl rounded-lg overflow-hidden">
             <div className="p-6">
               <h2 className="text-2xl font-semibold mb-4 text-primary-color">Make Your Investment</h2>
-              <p className="mb-4">By co-investing, you'll receive equity proportional to your investment amount in these startups.</p>
+              <p className="mb-4">{getInvestmentDescription()}</p>
               <button
                 onClick={() => setIsAllocationModalOpen(true)}
                 className="w-full bg-primary-color text-button-text-color py-3 px-6 rounded-full hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-opacity-50 transition duration-200 text-lg font-semibold"
@@ -201,7 +218,7 @@ const CoInvestPage: React.FC = () => {
                   borderRadius: 'var(--button-border-radius)',
                 }}
               >
-                Start Co-investment
+                {getButtonText()}
               </button>
             </div>
           </div>
