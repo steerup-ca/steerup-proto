@@ -10,6 +10,11 @@ import AddCampaignForm from './components/AddCampaignForm';
 import AddAdditionalFundingEntityForm from './components/AddAdditionalFundingEntityForm';
 import { AddFounderForm } from './components/AddFounderForm';
 import EditFounderPage from './components/EditFounderPage';
+import EditLeadInvestorPage from './components/EditLeadInvestorPage';
+import EditStartupPage from './components/EditStartupPage';
+import EditStartupSelectionPage from './components/EditStartupSelectionPage';
+import EditAdditionalFundingPage from './components/EditAdditionalFundingPage';
+import EditCampaignPage from './components/EditCampaignPage';
 import ExplorePage from './components/ExplorePage';
 import StartupDetailPage from './components/StartupDetailPage';
 import LeadInvestorDetailPage from './components/LeadInvestorDetailPage';
@@ -43,10 +48,15 @@ function App() {
           <Route path="/admin/add-lead-investor" element={<AddLeadInvestorForm />} />
           <Route path="/admin/add-startup" element={<AddStartupForm />} />
           <Route path="/admin/add-startups-selection" element={<AddStartupsSelectionForm />} />
+          <Route path="/admin/edit-startups-selection" element={<EditStartupSelectionPage />} />
           <Route path="/admin/add-campaign" element={<AddCampaignForm />} />
           <Route path="/admin/add-additional-funding-entity" element={<AddAdditionalFundingEntityForm />} />
           <Route path="/admin/add-founder" element={<AddFounderForm />} />
           <Route path="/admin/edit-founder" element={<EditFounderPage />} />
+          <Route path="/admin/edit-lead-investor" element={<EditLeadInvestorPage />} />
+          <Route path="/admin/edit-startup" element={<EditStartupPage />} />
+          <Route path="/admin/edit-additional-funding" element={<EditAdditionalFundingPage />} />
+          <Route path="/admin/edit-campaign" element={<EditCampaignPage />} />
         </Routes>
       </div>
     </HashRouter>

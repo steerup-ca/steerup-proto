@@ -1,9 +1,9 @@
 import React from 'react';
-import EditFounderForm from './EditFounderForm';
+import EditLeadInvestorForm from './EditLeadInvestorForm';
 import { useNavigate } from 'react-router-dom';
 import '../styles/theme.css';
 
-const EditFounderPage: React.FC = () => {
+const EditLeadInvestorPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleCancel = () => {
@@ -13,10 +13,10 @@ const EditFounderPage: React.FC = () => {
   return (
     <div className="page-container">
       <div className="page-content">
-        <EditFounderForm onCancel={handleCancel} />
+        <EditLeadInvestorForm onCancel={handleCancel} />
       </div>
     </div>
   );
 };
 
-export default EditFounderPage;
+export default EditLeadInvestorPage;

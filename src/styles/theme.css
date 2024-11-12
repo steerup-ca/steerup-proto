@@ -7,6 +7,7 @@
   --button-text-color: #ffffff;
   --secondary-color: #4a5568;
   --additional-funding-bg-color: #374151;
+  --input-bg-color: #2a2f36;
   
   /* Updated colors */
   --success-color: #4caf50;
@@ -20,11 +21,11 @@
   --shadow-color: rgba(0, 0, 0, 0.1);
   --overlay-color: rgba(0, 0, 0, 0.7);
 
-  /* New colors for investment types */
-  --equity-gradient-start: #3a4a5c;
-  --equity-gradient-end: #1f2937;
-  --debt-gradient-start: #2d3c4f;
-  --debt-gradient-end: #1a2433;
+  /* Investment type gradients - Balanced tints */
+  --equity-gradient-start: #424760;  /* Gray with moderate purple influence */
+  --equity-gradient-end: #252938;    /* Gray with moderate purple influence */
+  --debt-gradient-start: #3d4c62;    /* Gray with moderate blue influence */
+  --debt-gradient-end: #212e3a;      /* Gray with moderate blue influence */
   --debt-accent-color: #4299e1;
   --equity-accent-color: #8e44ad;
 
@@ -91,7 +92,7 @@
   border: 1px solid var(--secondary-color);
   border-radius: var(--border-radius);
   font-size: var(--font-size-medium);
-  background-color: var(--background-color);
+  background-color: var(--input-bg-color);
   color: var(--text-color);
   box-sizing: border-box;
 }
@@ -102,7 +103,7 @@
   border: 1px solid var(--secondary-color);
   border-radius: var(--border-radius);
   font-size: var(--font-size-medium);
-  background-color: var(--background-color);
+  background-color: var(--input-bg-color);
   color: var(--text-color);
   box-sizing: border-box;
   min-height: 100px;
@@ -211,13 +212,20 @@
 }
 
 /* Select element styles */
-select.form-input {
+select.form-input,
+.form-select {
   appearance: none;
+  background-color: var(--input-bg-color);
+  color: var(--text-color);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23ffffff' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 12px;
   padding-right: 2.5rem;
+  border: 1px solid var(--secondary-color);
+  border-radius: var(--border-radius);
+  width: 100%;
+  padding: var(--spacing-medium);
 }
 
 select[multiple].form-input {
@@ -225,8 +233,18 @@ select[multiple].form-input {
   min-height: 100px;
 }
 
-option {
+select.form-input option,
+.form-select option {
+  background-color: var(--input-bg-color);
+  color: var(--text-color);
   padding: var(--spacing-small);
+}
+
+select.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.25);
 }
 
 /* Modal styles */
