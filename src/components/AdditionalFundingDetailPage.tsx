@@ -43,8 +43,8 @@ const AdditionalFundingDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="detail-page">
-        <div className="detail-content" style={{ backgroundColor: 'var(--card-bg-color)' }}>
-          <div className="text-center">
+        <div className="detail-content">
+          <div style={{ textAlign: 'center' }}>
             <p style={{ color: 'var(--text-color)' }}>Loading...</p>
           </div>
         </div>
@@ -55,8 +55,8 @@ const AdditionalFundingDetailPage: React.FC = () => {
   if (error || !entity) {
     return (
       <div className="detail-page">
-        <div className="detail-content" style={{ backgroundColor: 'var(--card-bg-color)' }}>
-          <div className="text-center">
+        <div className="detail-content">
+          <div style={{ textAlign: 'center' }}>
             <p style={{ color: 'var(--text-color)' }}>{error || 'Entity not found'}</p>
           </div>
         </div>
@@ -66,14 +66,19 @@ const AdditionalFundingDetailPage: React.FC = () => {
 
   return (
     <div className="detail-page">
-      <div className="detail-content" style={{ backgroundColor: 'var(--card-bg-color)' }}>
+      <div className="detail-content">
         <button
           onClick={handleBack}
-          className="mb-6 flex items-center text-sm"
-          style={{ color: 'var(--text-color)' }}
+          style={{ 
+            color: 'var(--text-color)',
+            display: 'flex',
+            alignItems: 'center',
+            fontSize: '0.875rem',
+            marginBottom: 'var(--spacing-large)'
+          }}
         >
           <svg
-            className="w-5 h-5 mr-2"
+            style={{ width: '1.25rem', height: '1.25rem', marginRight: '0.5rem' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -89,59 +94,84 @@ const AdditionalFundingDetailPage: React.FC = () => {
           Back
         </button>
 
-        <div className="flex items-center mb-8">
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-large)' }}>
           {entity.iconUrl && (
-            <div 
-              className="w-16 h-16 rounded-lg overflow-hidden flex items-center justify-center mr-4"
-              style={{ backgroundColor: 'var(--detail-item-bg-color)' }}
-            >
+            <div style={{ 
+              width: '4rem',
+              height: '4rem',
+              borderRadius: 'var(--border-radius)',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 'var(--spacing-medium)',
+              backgroundColor: 'var(--detail-item-bg-color)'
+            }}>
               <img
                 src={entity.iconUrl}
                 alt={entity.name}
-                className="w-14 h-14 object-contain"
+                style={{ 
+                  width: '3.5rem',
+                  height: '3.5rem',
+                  objectFit: 'contain'
+                }}
               />
             </div>
           )}
           <div>
-            <h1 style={{ color: 'var(--text-color)', marginBottom: '0.5rem' }}>
+            <h1 style={{ 
+              color: 'var(--text-color)',
+              fontSize: '1.5rem',
+              fontWeight: 'bold',
+              marginBottom: '0.5rem'
+            }}>
               {entity.name}
             </h1>
             <p style={{ color: 'var(--secondary-color)' }}>{entity.label}</p>
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-large)' }}>
           <div>
-            <h2 
-              className="text-lg font-semibold mb-3"
-              style={{ color: 'var(--text-color)' }}
-            >
+            <h2 style={{ 
+              color: 'var(--text-color)',
+              fontSize: '1.125rem',
+              fontWeight: '600',
+              marginBottom: 'var(--spacing-small)'
+            }}>
               About
             </h2>
-            <p 
-              className="text-base"
-              style={{ color: 'var(--text-color)' }}
-            >
+            <p style={{ color: 'var(--text-color)' }}>
               {entity.description}
             </p>
           </div>
 
           {entity.credentials && entity.credentials.length > 0 && (
             <div>
-              <h2 
-                className="text-lg font-semibold mb-3"
-                style={{ color: 'var(--text-color)' }}
-              >
+              <h2 style={{ 
+                color: 'var(--text-color)',
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                marginBottom: 'var(--spacing-small)'
+              }}>
                 Credentials
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div style={{ 
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                gap: 'var(--spacing-medium)'
+              }}>
                 {entity.credentials.map((credential, index) => (
                   <div
                     key={index}
-                    className="p-4 rounded-lg"
-                    style={{ backgroundColor: 'var(--detail-item-bg-color)' }}
+                    style={{ 
+                      padding: 'var(--spacing-medium)',
+                      borderRadius: 'var(--border-radius)',
+                      backgroundColor: 'var(--detail-item-bg-color)',
+                      color: 'var(--text-color)'
+                    }}
                   >
-                    <p style={{ color: 'var(--text-color)' }}>{credential}</p>
+                    {credential}
                   </div>
                 ))}
               </div>
@@ -150,18 +180,24 @@ const AdditionalFundingDetailPage: React.FC = () => {
 
           {entity.website && (
             <div>
-              <h2 
-                className="text-lg font-semibold mb-3"
-                style={{ color: 'var(--text-color)' }}
-              >
+              <h2 style={{ 
+                color: 'var(--text-color)',
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                marginBottom: 'var(--spacing-small)'
+              }}>
                 Website
               </h2>
               <a
                 href={entity.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-base hover:underline"
-                style={{ color: 'var(--link-color)' }}
+                style={{ 
+                  color: 'var(--link-color)',
+                  textDecoration: 'none'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
               >
                 {entity.website}
               </a>
@@ -169,19 +205,22 @@ const AdditionalFundingDetailPage: React.FC = () => {
           )}
 
           <div>
-            <h2 
-              className="text-lg font-semibold mb-3"
-              style={{ color: 'var(--text-color)' }}
-            >
+            <h2 style={{ 
+              color: 'var(--text-color)',
+              fontSize: '1.125rem',
+              fontWeight: '600',
+              marginBottom: 'var(--spacing-small)'
+            }}>
               Type
             </h2>
-            <div
-              className="inline-block px-4 py-2 rounded-lg"
-              style={{ backgroundColor: 'var(--detail-item-bg-color)' }}
-            >
-              <p style={{ color: 'var(--text-color)' }}>
-                {entity.type === 'organization' ? 'Organization' : 'Individual'}
-              </p>
+            <div style={{ 
+              display: 'inline-block',
+              padding: '0.5rem 1rem',
+              borderRadius: 'var(--border-radius)',
+              backgroundColor: 'var(--detail-item-bg-color)',
+              color: 'var(--text-color)'
+            }}>
+              {entity.type === 'organization' ? 'Organization' : 'Individual'}
             </div>
           </div>
         </div>

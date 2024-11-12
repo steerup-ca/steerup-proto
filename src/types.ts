@@ -12,6 +12,12 @@ export enum InvestmentStage {
   EXIT = 'EXIT'
 }
 
+// Investment Type
+export enum InvestmentType {
+  EQUITY = 'equity',
+  DEBT = 'debt'
+}
+
 // Investment Allocation Constants and Types
 export const INVESTMENT_LIMITS = {
   PLATFORM_MINIMUM: 500,
@@ -126,6 +132,7 @@ export interface LeadInvestor {
   photo: string;
   title: string;
   bio: string;
+  linkedIn?: string;
   credentials: string[];
   areasOfExpertise: string[];
   company: string;
@@ -148,6 +155,41 @@ export interface FundingRound {
   date: string;
 }
 
+export interface PreviousStartup {
+  name: string;
+  role: string;
+  yearStarted: string;
+  yearEnded?: string;
+  exitType?: 'acquisition' | 'ipo' | 'shutdown' | 'ongoing';
+  exitValue?: number;
+  description: string;
+}
+
+export interface Education {
+  institution: string;
+  degree: string;
+  field: string;
+  yearCompleted: string;
+}
+
+export interface Founder {
+  id: string;
+  name: string;
+  photo: string;
+  title: string;
+  bio: string;
+  linkedIn?: string;
+  twitter?: string;
+  education: Education[];
+  previousStartups: PreviousStartup[];
+  areasOfExpertise: string[];
+  yearsOfExperience: number;
+  achievements: string[];
+  speakingEngagements?: string[];
+  patents?: string[];
+  publications?: string[];
+}
+
 export interface Startup {
   id: string;
   name: string;
@@ -155,6 +197,7 @@ export interface Startup {
   description: string;
   foundedYear: string;
   location: string;
+  founders: string[]; // Array of Founder IDs
   team: TeamMember[];
   metrics: Metric[];
   fundingHistory: FundingRound[];
@@ -187,18 +230,26 @@ export interface StartupProportion {
   proportion: number;
 }
 
+export interface DebtTerms {
+  interestRate: number;
+  maturityMonths: number;
+  paymentSchedule: 'monthly' | 'quarterly' | 'annually';
+}
+
 export interface StartupsSelection {
   id: string;
   title: string;
   description?: string;
   selectionLead: string;
   campaigns: string[];
-  startupProportions: StartupProportion[];  // New field for startup proportions
+  startupProportions: StartupProportion[];
   goal: number;
   currentAmount: number;
   daysLeft: number;
   backersCount: number;
   additionalFunding: CampaignAdditionalFunding[];
+  investmentType: InvestmentType;
+  debtTerms?: DebtTerms;
 }
 
 export interface Campaign {

@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import Button from './Button';
 import { db } from '../firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
-import { StartupsSelection, LeadInvestor, Campaign, Startup, AdditionalFundingEntity, CampaignAdditionalFunding, StartupProportion } from '../types';
-import '../styles/forms.css';
+import { StartupsSelection, LeadInvestor, Campaign, Startup, AdditionalFundingEntity, CampaignAdditionalFunding, StartupProportion, InvestmentType, DebtTerms } from '../types';
+import '../styles/theme.css';
 
 const AddStartupsSelectionForm: React.FC = () => {
   const [startupsSelection, setStartupsSelection] = useState<Omit<StartupsSelection, 'id'>>({
     title: '',
     selectionLead: '',
     campaigns: [],
-    startupProportions: [], // Initialize empty proportions array
+    startupProportions: [],
     goal: 0,
     currentAmount: 0,
     daysLeft: 0,
     backersCount: 0,
     additionalFunding: [],
+    investmentType: InvestmentType.EQUITY,
+    debtTerms: undefined
   });
 
   const [leadInvestors, setLeadInvestors] = useState<{ [id: string]: LeadInvestor }>({});
@@ -74,6 +75,33 @@ const AddStartupsSelectionForm: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    if (name === 'investmentType') {
+      const newType = value as InvestmentType;
+      setStartupsSelection(prev => ({
+        ...prev,
+        investmentType: newType,
+        debtTerms: newType === InvestmentType.DEBT ? {
+          interestRate: 0,
+          maturityMonths: 0,
+          paymentSchedule: 'monthly'
+        } : undefined
+      }));
+      return;
+    }
+
+    if (name.startsWith('debtTerms.')) {
+      const field = name.split('.')[1];
+      setStartupsSelection(prev => ({
+        ...prev,
+        debtTerms: {
+          ...prev.debtTerms!,
+          [field]: field === 'interestRate' || field === 'maturityMonths' ? Number(value) : value
+        }
+      }));
+      return;
+    }
+
     setStartupsSelection(prev => ({
       ...prev,
       [name]: name === 'currentAmount' || name === 'daysLeft' || name === 'backersCount'
@@ -86,10 +114,8 @@ const AddStartupsSelectionForm: React.FC = () => {
     const selectedCampaignIds = Array.from(e.target.selectedOptions, option => option.value);
     const selectedCampaigns = availableCampaigns.filter(campaign => selectedCampaignIds.includes(campaign.id));
     
-    // Calculate total steerup_amount for all selected campaigns
     const totalAmount = selectedCampaigns.reduce((sum, campaign) => sum + campaign.steerup_amount, 0);
     
-    // Calculate proportions based on each campaign's steerup_amount relative to total
     const newProportions: StartupProportion[] = selectedCampaigns.map(campaign => ({
       campaignId: campaign.id,
       proportion: (campaign.steerup_amount / totalAmount) * 100
@@ -136,7 +162,6 @@ const AddStartupsSelectionForm: React.FC = () => {
     try {
       const docRef = await addDoc(collection(db, 'startupsSelections'), startupsSelection);
       setSuccessMessage('Startups Selection added successfully!');
-      // Reset form fields
       setStartupsSelection({
         title: '',
         selectionLead: '',
@@ -147,6 +172,8 @@ const AddStartupsSelectionForm: React.FC = () => {
         daysLeft: 0,
         backersCount: 0,
         additionalFunding: [],
+        investmentType: InvestmentType.EQUITY,
+        debtTerms: undefined
       });
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
@@ -167,175 +194,259 @@ const AddStartupsSelectionForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="steerup-form">
-      <h2 className="form-title">Add Startups Selection</h2>
-      
-      {successMessage && <div className="success-message">{successMessage}</div>}
-      {errorMessage && <div className="error-message">{errorMessage}</div>}
+    <div className="form-container">
+      <form onSubmit={handleSubmit} className="steerup-form">
+        <h2 className="form-title">Add Startups Selection</h2>
+        
+        {successMessage && <div className="success-message">{successMessage}</div>}
+        {errorMessage && <div className="error-message">{errorMessage}</div>}
 
-      <div className="form-group">
-        <label htmlFor="title">Title</label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          value={startupsSelection.title}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
+        <div className="form-section">
+          <h3>Basic Information</h3>
+          <div className="form-group">
+            <label htmlFor="title">Title *</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={startupsSelection.title}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="selectionLead">Selection Lead</label>
-        <select
-          id="selectionLead"
-          name="selectionLead"
-          value={startupsSelection.selectionLead}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        >
-          <option value="">Select a Lead Investor</option>
-          {Object.values(leadInvestors).map((investor) => (
-            <option key={investor.id} value={investor.id}>
-              {investor.name}
-            </option>
-          ))}
-        </select>
-      </div>
+          <div className="form-group">
+            <label htmlFor="investmentType">Investment Type *</label>
+            <select
+              id="investmentType"
+              name="investmentType"
+              value={startupsSelection.investmentType}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            >
+              <option value={InvestmentType.EQUITY}>Equity</option>
+              <option value={InvestmentType.DEBT}>Debt</option>
+            </select>
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="campaigns">Campaigns</label>
-        <p className="form-instruction">Hold Ctrl (Windows) or Cmd (Mac) to select multiple campaigns</p>
-        <select
-          id="campaigns"
-          name="campaigns"
-          multiple
-          value={startupsSelection.campaigns}
-          onChange={handleCampaignsChange}
-          required
-          className="form-input"
-        >
-          {availableCampaigns.map((campaign) => (
-            <option key={campaign.id} value={campaign.id}>
-              {formatCampaignOption(campaign)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {startupsSelection.campaigns.length > 0 && (
-        <div className="form-group">
-          <label>Investment Proportions (Computed from Campaign Amounts)</label>
-          <p className="form-instruction">These proportions are automatically calculated based on each campaign's funding amount</p>
-          {startupsSelection.startupProportions.map((proportion) => {
-            const campaign = availableCampaigns.find(c => c.id === proportion.campaignId);
-            const startup = campaign ? startups[campaign.startupId] : null;
-            return (
-              <div key={proportion.campaignId} className="proportion-display flex items-center gap-4 mb-2">
-                <span className="flex-grow">{startup?.name || 'Unknown Startup'}</span>
-                <span className="text-right w-24">{proportion.proportion.toFixed(2)}%</span>
-                <span className="text-right w-32">${campaign?.steerup_amount.toLocaleString()}</span>
+          {startupsSelection.investmentType === InvestmentType.DEBT && (
+            <div className="form-subsection">
+              <h3>Debt Terms</h3>
+              <div className="form-group">
+                <label htmlFor="debtTerms.interestRate">Interest Rate (% APR) *</label>
+                <input
+                  type="number"
+                  id="debtTerms.interestRate"
+                  name="debtTerms.interestRate"
+                  value={startupsSelection.debtTerms?.interestRate || 0}
+                  onChange={handleInputChange}
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  required
+                  className="form-input"
+                />
               </div>
-            );
-          })}
-        </div>
-      )}
 
-      <div className="form-group">
-        <label>Goal Amount (Computed)</label>
-        <p>${startupsSelection.goal.toLocaleString()}</p>
-      </div>
+              <div className="form-group">
+                <label htmlFor="debtTerms.maturityMonths">Term Length (Months) *</label>
+                <input
+                  type="number"
+                  id="debtTerms.maturityMonths"
+                  name="debtTerms.maturityMonths"
+                  value={startupsSelection.debtTerms?.maturityMonths || 0}
+                  onChange={handleInputChange}
+                  min="1"
+                  required
+                  className="form-input"
+                />
+              </div>
 
-      <div className="form-group">
-        <label htmlFor="currentAmount">Current Amount</label>
-        <input
-          type="number"
-          id="currentAmount"
-          name="currentAmount"
-          value={startupsSelection.currentAmount}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="daysLeft">Days Left</label>
-        <input
-          type="number"
-          id="daysLeft"
-          name="daysLeft"
-          value={startupsSelection.daysLeft}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="backersCount">Backers Count</label>
-        <input
-          type="number"
-          id="backersCount"
-          name="backersCount"
-          value={startupsSelection.backersCount}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
-
-      <div className="form-group">
-        <h3>Additional Funding</h3>
-        {startupsSelection.additionalFunding.map((funding) => {
-          const entity = additionalFundingEntities.find(e => e.id === funding.entityId);
-          return entity ? (
-            <div key={funding.entityId} className="funding-item flex items-center mb-2">
-              <span>{entity.name}: ${funding.amount.toLocaleString()}</span>
-              <div className="ml-auto">
-                <Button 
-                  onClick={() => handleRemoveFunding(funding.entityId)}
-                  className="remove-btn px-2 py-1"
+              <div className="form-group">
+                <label htmlFor="debtTerms.paymentSchedule">Payment Schedule *</label>
+                <select
+                  id="debtTerms.paymentSchedule"
+                  name="debtTerms.paymentSchedule"
+                  value={startupsSelection.debtTerms?.paymentSchedule || 'monthly'}
+                  onChange={handleInputChange}
+                  required
+                  className="form-input"
                 >
-                  Remove
-                </Button>
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="annually">Annually</option>
+                </select>
               </div>
             </div>
-          ) : null;
-        })}
-        
-        <div className="add-funding flex gap-4 mt-4">
-          <select
-            name="entityId"
-            value={newFunding.entityId}
-            onChange={handleNewFundingChange}
-            className="form-input flex-grow"
-          >
-            <option value="">Select Additional Funding Entity</option>
-            {additionalFundingEntities.map((entity) => (
-              <option key={entity.id} value={entity.id}>
-                {entity.name}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            name="amount"
-            value={newFunding.amount}
-            onChange={handleNewFundingChange}
-            placeholder="Amount"
-            className="form-input w-32"
-          />
-          <Button onClick={handleAddFunding} className="add-btn w-32">
-            Add Funding
-          </Button>
+          )}
         </div>
-      </div>
 
-      <Button type="submit" className="submit-btn">Add Startups Selection</Button>
-    </form>
+        <div className="form-section">
+          <h3>Selection Details</h3>
+          <div className="form-group">
+            <label htmlFor="selectionLead">Selection Lead *</label>
+            <select
+              id="selectionLead"
+              name="selectionLead"
+              value={startupsSelection.selectionLead}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            >
+              <option value="">Select a Lead Investor</option>
+              {Object.values(leadInvestors).map((investor) => (
+                <option key={investor.id} value={investor.id}>
+                  {investor.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="campaigns">Campaigns *</label>
+            <p className="form-instruction">Hold Ctrl (Windows) or Cmd (Mac) to select multiple campaigns</p>
+            <select
+              id="campaigns"
+              name="campaigns"
+              multiple
+              value={startupsSelection.campaigns}
+              onChange={handleCampaignsChange}
+              required
+              className="form-input"
+            >
+              {availableCampaigns.map((campaign) => (
+                <option key={campaign.id} value={campaign.id}>
+                  {formatCampaignOption(campaign)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {startupsSelection.campaigns.length > 0 && (
+            <div className="form-group">
+              <label>Investment Proportions</label>
+              <p className="form-instruction">These proportions are automatically calculated based on each campaign's funding amount</p>
+              {startupsSelection.startupProportions.map((proportion) => {
+                const campaign = availableCampaigns.find(c => c.id === proportion.campaignId);
+                const startup = campaign ? startups[campaign.startupId] : null;
+                return (
+                  <div key={proportion.campaignId} className="form-subsection">
+                    <div>{startup?.name || 'Unknown Startup'}</div>
+                    <div>Proportion: {proportion.proportion.toFixed(2)}%</div>
+                    <div>Amount: ${campaign?.steerup_amount.toLocaleString()}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="form-section">
+          <h3>Funding Information</h3>
+          <div className="form-group">
+            <label>Goal Amount (Computed)</label>
+            <div className="form-input">${startupsSelection.goal.toLocaleString()}</div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="currentAmount">Current Amount *</label>
+            <input
+              type="number"
+              id="currentAmount"
+              name="currentAmount"
+              value={startupsSelection.currentAmount}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="daysLeft">Days Left *</label>
+            <input
+              type="number"
+              id="daysLeft"
+              name="daysLeft"
+              value={startupsSelection.daysLeft}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="backersCount">Backers Count *</label>
+            <input
+              type="number"
+              id="backersCount"
+              name="backersCount"
+              value={startupsSelection.backersCount}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
+        </div>
+
+        <div className="form-section">
+          <h3>Additional Funding</h3>
+          {startupsSelection.additionalFunding.map((funding) => {
+            const entity = additionalFundingEntities.find(e => e.id === funding.entityId);
+            return entity ? (
+              <div key={funding.entityId} className="form-subsection">
+                <div>{entity.name}: ${funding.amount.toLocaleString()}</div>
+                <button 
+                  type="button"
+                  onClick={() => handleRemoveFunding(funding.entityId)}
+                  className="btn-secondary"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : null;
+          })}
+          
+          <div className="array-input-group">
+            <select
+              name="entityId"
+              value={newFunding.entityId}
+              onChange={handleNewFundingChange}
+              className="form-input"
+            >
+              <option value="">Select Additional Funding Entity</option>
+              {additionalFundingEntities.map((entity) => (
+                <option key={entity.id} value={entity.id}>
+                  {entity.name}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              name="amount"
+              value={newFunding.amount}
+              onChange={handleNewFundingChange}
+              placeholder="Amount"
+              className="form-input"
+            />
+            <button 
+              type="button"
+              onClick={handleAddFunding}
+              className="btn-secondary"
+            >
+              Add Funding
+            </button>
+          </div>
+        </div>
+
+        <div className="form-actions">
+          <button type="submit" className="btn-primary">
+            Add Startups Selection
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

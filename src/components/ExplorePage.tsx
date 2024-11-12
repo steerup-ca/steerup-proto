@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { StartupsSelection, LeadInvestor, Startup, Campaign } from '../types';
+import { StartupsSelection, LeadInvestor, Startup, Campaign, InvestmentType } from '../types';
 import StartupsSelectionCard from './StartupsSelectionCard';
+import { mockSelections, mockLeadInvestors, mockStartups, mockCampaigns } from '../mockData';
+
+// Set to true to use mock data, false to use Firebase
+const USE_MOCK_DATA = false;
 
 const ExplorePage: React.FC = () => {
   const [startupsSelections, setStartupsSelections] = useState<StartupsSelection[]>([]);
@@ -18,10 +22,28 @@ const ExplorePage: React.FC = () => {
         setIsLoading(true);
         setError(null);
 
-        // Fetch startups selections
+        if (USE_MOCK_DATA) {
+          // Use mock data
+          setStartupsSelections(mockSelections);
+          setLeadInvestors(mockLeadInvestors);
+          setStartups(mockStartups);
+          setCampaigns(mockCampaigns);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch startups selections from Firebase
         const selectionsQuery = query(collection(db, 'startupsSelections'), orderBy('daysLeft'));
         const selectionsSnapshot = await getDocs(selectionsQuery);
-        const selectionsData = selectionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StartupsSelection));
+        const selectionsData = selectionsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          // Ensure investmentType exists, default to EQUITY for existing records
+          return {
+            id: doc.id,
+            ...data,
+            investmentType: data.investmentType || InvestmentType.EQUITY
+          } as StartupsSelection;
+        });
         setStartupsSelections(selectionsData);
 
         // Fetch lead investors

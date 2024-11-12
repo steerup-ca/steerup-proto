@@ -8,9 +8,11 @@ import AddStartupForm from './components/AddStartupForm';
 import AddStartupsSelectionForm from './components/AddStartupsSelectionForm';
 import AddCampaignForm from './components/AddCampaignForm';
 import AddAdditionalFundingEntityForm from './components/AddAdditionalFundingEntityForm';
+import { AddFounderForm } from './components/AddFounderForm';
+import EditFounderPage from './components/EditFounderPage';
 import ExplorePage from './components/ExplorePage';
-import StartupDetailsPage from './components/StartupDetailsPage';
-import LeadInvestorDetailsPage from './components/LeadInvestorDetailsPage';
+import StartupDetailPage from './components/StartupDetailPage';
+import LeadInvestorDetailPage from './components/LeadInvestorDetailPage';
 import AdditionalFundingDetailPage from './components/AdditionalFundingDetailPage';
 import LandingPage from './components/LandingPage';
 import CoInvestPage from './components/CoInvestPage';
@@ -30,8 +32,8 @@ function App() {
           <Route path="/home" element={<LandingPage />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/startup/:id" element={<StartupDetailsPage />} />
-          <Route path="/lead-investor/:id" element={<LeadInvestorDetailsPage />} />
+          <Route path="/startup/:id" element={<StartupDetailPage />} />
+          <Route path="/lead-investor/:id" element={<LeadInvestorDetailPage />} />
           <Route path="/additional-funding/:id" element={<AdditionalFundingDetailPage />} />
           <Route path="/co-invest/:id" element={<CoInvestPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
@@ -43,6 +45,8 @@ function App() {
           <Route path="/admin/add-startups-selection" element={<AddStartupsSelectionForm />} />
           <Route path="/admin/add-campaign" element={<AddCampaignForm />} />
           <Route path="/admin/add-additional-funding-entity" element={<AddAdditionalFundingEntityForm />} />
+          <Route path="/admin/add-founder" element={<AddFounderForm />} />
+          <Route path="/admin/edit-founder" element={<EditFounderPage />} />
         </Routes>
       </div>
     </HashRouter>

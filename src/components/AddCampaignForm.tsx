@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import Button from './Button';
 import { db } from '../firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { Timestamp } from 'firebase/firestore';
 import { Campaign, LeadInvestor, Startup, AdditionalFundingEntity, CampaignAdditionalFunding } from '../types';
-import '../styles/forms.css';
+import '../styles/theme.css';
 
 const AddCampaignForm: React.FC = () => {
   const [campaign, setCampaign] = useState<Omit<Campaign, 'id'>>({
@@ -118,7 +117,6 @@ const AddCampaignForm: React.FC = () => {
     try {
       const docRef = await addDoc(collection(db, 'campaigns'), campaign);
       setSuccessMessage('Campaign added successfully!');
-      // Reset form
       setCampaign({
         startupId: '',
         leadInvestorId: '',
@@ -145,190 +143,205 @@ const AddCampaignForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="steerup-form">
-      <h2 className="form-title">Add Campaign</h2>
-      
-      {successMessage && <div className="success-message">{successMessage}</div>}
-      {errorMessage && <div className="error-message">{errorMessage}</div>}
+    <div className="form-container">
+      <form onSubmit={handleSubmit} className="steerup-form">
+        <h2 className="form-title">Add Campaign</h2>
+        
+        {successMessage && <div className="success-message">{successMessage}</div>}
+        {errorMessage && <div className="error-message">{errorMessage}</div>}
 
-      <div className="form-group">
-        <label htmlFor="startupId">Startup</label>
-        <select
-          id="startupId"
-          name="startupId"
-          value={campaign.startupId}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        >
-          <option value="">Select a Startup</option>
-          {availableStartups.map((startup) => (
-            <option key={startup.id} value={startup.id}>
-              {startup.name}
-            </option>
-          ))}
-        </select>
-      </div>
+        <div className="form-section">
+          <h3>Basic Information</h3>
+          <div className="form-group">
+            <label htmlFor="startupId">Startup *</label>
+            <select
+              id="startupId"
+              name="startupId"
+              value={campaign.startupId}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            >
+              <option value="">Select a Startup</option>
+              {availableStartups.map((startup) => (
+                <option key={startup.id} value={startup.id}>
+                  {startup.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="leadInvestorId">Lead Investor</label>
-        <select
-          id="leadInvestorId"
-          name="leadInvestorId"
-          value={campaign.leadInvestorId}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        >
-          <option value="">Select a Lead Investor</option>
-          {leadInvestors.map((investor) => (
-            <option key={investor.id} value={investor.id}>
-              {investor.name}
-            </option>
-          ))}
-        </select>
-      </div>
+          <div className="form-group">
+            <label htmlFor="leadInvestorId">Lead Investor *</label>
+            <select
+              id="leadInvestorId"
+              name="leadInvestorId"
+              value={campaign.leadInvestorId}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            >
+              <option value="">Select a Lead Investor</option>
+              {leadInvestors.map((investor) => (
+                <option key={investor.id} value={investor.id}>
+                  {investor.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="creation_date">Creation Date</label>
-        <input
-          type="date"
-          id="creation_date"
-          name="creation_date"
-          value={campaign.creation_date.toDate().toISOString().split('T')[0]}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
+          <div className="form-group">
+            <label htmlFor="creation_date">Creation Date *</label>
+            <input
+              type="date"
+              id="creation_date"
+              name="creation_date"
+              value={campaign.creation_date.toDate().toISOString().split('T')[0]}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="steerup_amount">Steerup Amount</label>
-        <input
-          type="number"
-          id="steerup_amount"
-          name="steerup_amount"
-          value={campaign.steerup_amount}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
+          <div className="form-group">
+            <label htmlFor="steerup_amount">Steerup Amount *</label>
+            <input
+              type="number"
+              id="steerup_amount"
+              name="steerup_amount"
+              value={campaign.steerup_amount}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
+        </div>
 
-      <div className="form-group">
-        <label htmlFor="minAmount">Minimum Amount</label>
-        <input
-          type="number"
-          id="minAmount"
-          name="minAmount"
-          value={campaign.offeringDetails.minAmount}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
+        <div className="form-section">
+          <h3>Offering Details</h3>
+          <div className="form-group">
+            <label htmlFor="minAmount">Minimum Amount *</label>
+            <input
+              type="number"
+              id="minAmount"
+              name="minAmount"
+              value={campaign.offeringDetails.minAmount}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="maxAmount">Maximum Amount</label>
-        <input
-          type="number"
-          id="maxAmount"
-          name="maxAmount"
-          value={campaign.offeringDetails.maxAmount}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
+          <div className="form-group">
+            <label htmlFor="maxAmount">Maximum Amount *</label>
+            <input
+              type="number"
+              id="maxAmount"
+              name="maxAmount"
+              value={campaign.offeringDetails.maxAmount}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="equity">Equity (%)</label>
-        <input
-          type="number"
-          id="equity"
-          name="equity"
-          value={campaign.offeringDetails.equity}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
+          <div className="form-group">
+            <label htmlFor="equity">Equity (%) *</label>
+            <input
+              type="number"
+              id="equity"
+              name="equity"
+              value={campaign.offeringDetails.equity}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="valuation">Valuation</label>
-        <input
-          type="number"
-          id="valuation"
-          name="valuation"
-          value={campaign.offeringDetails.valuation}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
+          <div className="form-group">
+            <label htmlFor="valuation">Valuation *</label>
+            <input
+              type="number"
+              id="valuation"
+              name="valuation"
+              value={campaign.offeringDetails.valuation}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="offeringDocument">Offering Document URL</label>
-        <input
-          type="text"
-          id="offeringDocument"
-          name="offeringDocument"
-          value={campaign.offeringDetails.offeringDocument}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-        />
-      </div>
+          <div className="form-group">
+            <label htmlFor="offeringDocument">Offering Document URL *</label>
+            <input
+              type="text"
+              id="offeringDocument"
+              name="offeringDocument"
+              value={campaign.offeringDetails.offeringDocument}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+            />
+          </div>
+        </div>
 
-      <div className="form-group">
-        <h3>Additional Funding</h3>
-        {campaign.additionalFunding.map((funding) => {
-          const entity = additionalFundingEntities.find(e => e.id === funding.entityId);
-          return (
-            <div key={funding.entityId} className="funding-item flex items-center mb-2">
-              <span>{entity?.name}: ${funding.amount.toLocaleString()}</span>
-              <div className="ml-auto">
-                <Button 
+        <div className="form-section">
+          <h3>Additional Funding</h3>
+          {campaign.additionalFunding.map((funding) => {
+            const entity = additionalFundingEntities.find(e => e.id === funding.entityId);
+            return (
+              <div key={funding.entityId} className="form-subsection">
+                <div>{entity?.name}: ${funding.amount.toLocaleString()}</div>
+                <button 
+                  type="button"
                   onClick={() => handleRemoveFunding(funding.entityId)}
-                  className="remove-btn px-2 py-1"
+                  className="btn-secondary"
                 >
                   Remove
-                </Button>
+                </button>
               </div>
-            </div>
-          );
-        })}
-        
-        <div className="add-funding flex gap-4 mt-4">
-          <select
-            name="entityId"
-            value={newFunding.entityId}
-            onChange={handleNewFundingChange}
-            className="form-input flex-grow"
-          >
-            <option value="">Select Additional Funding Entity</option>
-            {additionalFundingEntities.map((entity) => (
-              <option key={entity.id} value={entity.id}>
-                {entity.name}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            name="amount"
-            value={newFunding.amount}
-            onChange={handleNewFundingChange}
-            placeholder="Amount"
-            className="form-input w-32"
-          />
-          <Button onClick={handleAddFunding} className="add-btn w-32">
-            Add Funding
-          </Button>
+            );
+          })}
+          
+          <div className="array-input-group">
+            <select
+              name="entityId"
+              value={newFunding.entityId}
+              onChange={handleNewFundingChange}
+              className="form-input"
+            >
+              <option value="">Select Additional Funding Entity</option>
+              {additionalFundingEntities.map((entity) => (
+                <option key={entity.id} value={entity.id}>
+                  {entity.name}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              name="amount"
+              value={newFunding.amount}
+              onChange={handleNewFundingChange}
+              placeholder="Amount"
+              className="form-input"
+            />
+            <button 
+              type="button"
+              onClick={handleAddFunding}
+              className="btn-secondary"
+            >
+              Add Funding
+            </button>
+          </div>
         </div>
-      </div>
 
-      <Button type="submit" className="submit-btn">Add Campaign</Button>
-    </form>
+        <div className="form-actions">
+          <button type="submit" className="btn-primary">
+            Add Campaign
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

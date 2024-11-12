@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { generateSecurityDocument } from '../utils/pdfGenerator';
 import { Timestamp } from 'firebase/firestore';
 import { InvestmentStage } from '../types';
+import '../styles/DetailPage.css';
 
 interface SecurityDocumentModalProps {
   isOpen: boolean;
@@ -73,36 +74,71 @@ const SecurityDocumentModal: React.FC<SecurityDocumentModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-smoke-light flex items-center justify-center">
-      <div className="fixed inset-0 bg-black opacity-75 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-[var(--card-bg-color)] w-full max-w-4xl m-4 flex-col flex rounded-lg shadow-2xl h-[80vh]">
-        <div className="p-4 border-b border-[var(--border-color)] flex justify-between items-center">
-          <h2 className="text-[var(--text-color)] text-[var(--font-size-large)] font-bold">
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ height: '80vh', maxHeight: '80vh' }}>
+        <div style={{ 
+          padding: 'var(--spacing-medium)',
+          borderBottom: '1px solid var(--secondary-color)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h2 style={{ 
+            color: 'var(--text-color)',
+            fontSize: 'var(--font-size-large)',
+            fontWeight: 'bold'
+          }}>
             {startupName} Security Document
           </h2>
-          <div className="flex gap-2">
+          <div style={{ display: 'flex', gap: 'var(--spacing-small)' }}>
             <button
               onClick={handleDownload}
-              className="flex items-center gap-1 bg-[var(--primary-color)] text-[var(--button-text-color)] px-4 py-2 rounded-[var(--button-border-radius)] hover:bg-opacity-90 transition-all"
+              className="primary-button"
+              style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                padding: '0.5rem 1rem'
+              }}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg style={{ width: '1rem', height: '1rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
               </svg>
               Download
             </button>
             <button
               onClick={onClose}
-              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[var(--detail-item-bg-color)] transition-all"
+              style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '2rem',
+                height: '2rem',
+                borderRadius: '50%',
+                color: 'var(--text-color)',
+                transition: 'background-color 0.2s',
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--detail-item-bg-color)'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              <svg className="w-5 h-5 text-[var(--text-color)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg style={{ width: '1.25rem', height: '1.25rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
           </div>
         </div>
-        <div className="flex-1 p-4 bg-white overflow-hidden">
+        <div style={{ 
+          flex: 1,
+          padding: 'var(--spacing-medium)',
+          backgroundColor: 'white',
+          overflow: 'hidden',
+          height: 'calc(100% - 4rem)'
+        }}>
           {pdfData ? (
-            <div className="w-full h-full">
+            <div style={{ width: '100%', height: '100%' }}>
               <embed
                 src={pdfData + '#toolbar=0&navpanes=0&scrollbar=0'}
                 type="application/pdf"
@@ -116,8 +152,13 @@ const SecurityDocumentModal: React.FC<SecurityDocumentModalProps> = ({
               />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-[var(--text-color)]">Loading document...</p>
+            <div style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%'
+            }}>
+              <p style={{ color: 'var(--text-color)' }}>Loading document...</p>
             </div>
           )}
         </div>
