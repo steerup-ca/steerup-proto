@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { StartupsSelection, StartupProportion, CampaignAdditionalFunding, InvestmentType, AdditionalFundingEntity } from '../types';
+import { StartupsSelection, StartupProportion, CampaignAdditionalFunding, InvestmentType, AdditionalFundingEntity, DebtTerms } from '../types';
 import '../styles/theme.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,6 +10,42 @@ interface EditStartupSelectionFormProps {
 }
 
 type StartupSelectionFormData = Omit<StartupsSelection, 'id'>;
+
+const defaultFormData: StartupSelectionFormData = {
+  title: '',
+  description: '',
+  selectionLead: '',
+  campaigns: [],
+  startupProportions: [],
+  goal: 0,
+  currentAmount: 0,
+  daysLeft: 0,
+  backersCount: 0,
+  additionalFunding: [],
+  investmentType: InvestmentType.EQUITY,
+  debtTerms: undefined
+};
+
+const defaultDebtTerms: DebtTerms = {
+  interestRate: 0,
+  maturityMonths: 0,
+  paymentSchedule: 'monthly'
+};
+
+// Helper function to remove undefined values from an object
+const removeUndefined = (obj: any): any => {
+  const newObj: any = {};
+  Object.keys(obj).forEach(key => {
+    if (obj[key] !== undefined) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        newObj[key] = removeUndefined(obj[key]);
+      } else {
+        newObj[key] = obj[key];
+      }
+    }
+  });
+  return newObj;
+};
 
 export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> = ({ onCancel }) => {
   const navigate = useNavigate();
@@ -20,31 +56,24 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
-
-  const [formData, setFormData] = useState<StartupSelectionFormData>({
-    title: '',
-    description: '',
-    selectionLead: '',
-    campaigns: [],
-    startupProportions: [],
-    goal: 0,
-    currentAmount: 0,
-    daysLeft: 0,
-    backersCount: 0,
-    additionalFunding: [],
-    investmentType: InvestmentType.EQUITY,
-    debtTerms: undefined
-  });
+  const [formData, setFormData] = useState<StartupSelectionFormData>(defaultFormData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
+        setError(null);
+
         // Fetch selections
         const selectionsSnapshot = await getDocs(collection(db, 'startupsSelections'));
         const selectionsData = selectionsSnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          campaigns: doc.data().campaigns || [],
+          startupProportions: doc.data().startupProportions || [],
+          additionalFunding: doc.data().additionalFunding || []
         })) as StartupsSelection[];
+
         setSelections(selectionsData);
 
         // Fetch additional funding entities
@@ -53,11 +82,12 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
           id: doc.id,
           ...doc.data()
         })) as AdditionalFundingEntity[];
-        setFundingEntities(entitiesData);
 
+        setFundingEntities(entitiesData);
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch data');
+        console.error('Error fetching data:', err);
+        setError('Failed to fetch data. Please try again.');
         setLoading(false);
       }
     };
@@ -65,38 +95,85 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
     fetchData();
   }, []);
 
-  const handleSelectionSelect = (selectionId: string) => {
-    const selectedSelection = selections.find(s => s.id === selectionId);
-    if (selectedSelection) {
+  const handleSelectionSelect = async (selectionId: string) => {
+    try {
+      if (!selectionId) {
+        setFormData(defaultFormData);
+        setSelectedSelectionId('');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      const selectionRef = doc(db, 'startupsSelections', selectionId);
+      const selectionDoc = await getDoc(selectionRef);
+
+      if (!selectionDoc.exists()) {
+        throw new Error('Selected startup selection not found');
+      }
+
+      const data = selectionDoc.data() as Omit<StartupsSelection, 'id'>;
+      
+      // Ensure all arrays are initialized even if undefined in the data
+      const formattedData: StartupSelectionFormData = {
+        title: data.title || '',
+        description: data.description || '',
+        selectionLead: data.selectionLead || '',
+        campaigns: data.campaigns || [],
+        startupProportions: data.startupProportions || [],
+        goal: data.goal || 0,
+        currentAmount: data.currentAmount || 0,
+        daysLeft: data.daysLeft || 0,
+        backersCount: data.backersCount || 0,
+        additionalFunding: data.additionalFunding || [],
+        investmentType: data.investmentType || InvestmentType.EQUITY,
+        debtTerms: data.investmentType === InvestmentType.DEBT 
+          ? { ...defaultDebtTerms, ...data.debtTerms }
+          : undefined
+      };
+
       setSelectedSelectionId(selectionId);
-      setFormData({
-        title: selectedSelection.title,
-        description: selectedSelection.description || '',
-        selectionLead: selectedSelection.selectionLead,
-        campaigns: selectedSelection.campaigns,
-        startupProportions: selectedSelection.startupProportions,
-        goal: selectedSelection.goal,
-        currentAmount: selectedSelection.currentAmount,
-        daysLeft: selectedSelection.daysLeft,
-        backersCount: selectedSelection.backersCount,
-        additionalFunding: selectedSelection.additionalFunding,
-        investmentType: selectedSelection.investmentType,
-        debtTerms: selectedSelection.debtTerms
-      });
+      setFormData(formattedData);
+    } catch (err) {
+      console.error('Error selecting startup selection:', err);
+      setError('Failed to load startup selection details. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleInputChange = (field: keyof StartupSelectionFormData, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      if (field === 'investmentType') {
+        // When switching to equity, remove debtTerms
+        if (value === InvestmentType.EQUITY) {
+          return {
+            ...prev,
+            [field]: value,
+            debtTerms: undefined
+          };
+        }
+        // When switching to debt, initialize debtTerms with defaults
+        if (value === InvestmentType.DEBT) {
+          return {
+            ...prev,
+            [field]: value,
+            debtTerms: defaultDebtTerms
+          };
+        }
+      }
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
   };
 
   const handleStartupProportionChange = (index: number, field: keyof StartupProportion, value: any) => {
     setFormData(prev => ({
       ...prev,
-      startupProportions: prev.startupProportions.map((prop, i) => 
+      startupProportions: (prev.startupProportions || []).map((prop, i) => 
         i === index ? { ...prop, [field]: value } : prop
       )
     }));
@@ -105,7 +182,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
   const handleAdditionalFundingChange = (index: number, field: keyof CampaignAdditionalFunding, value: any) => {
     setFormData(prev => ({
       ...prev,
-      additionalFunding: prev.additionalFunding.map((funding, i) => 
+      additionalFunding: (prev.additionalFunding || []).map((funding, i) => 
         i === index ? { ...funding, [field]: value } : funding
       )
     }));
@@ -114,28 +191,28 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
   const addStartupProportion = () => {
     setFormData(prev => ({
       ...prev,
-      startupProportions: [...prev.startupProportions, { campaignId: '', proportion: 0 }]
+      startupProportions: [...(prev.startupProportions || []), { campaignId: '', proportion: 0 }]
     }));
   };
 
   const removeStartupProportion = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      startupProportions: prev.startupProportions.filter((_, i) => i !== index)
+      startupProportions: (prev.startupProportions || []).filter((_, i) => i !== index)
     }));
   };
 
   const addAdditionalFunding = () => {
     setFormData(prev => ({
       ...prev,
-      additionalFunding: [...prev.additionalFunding, { entityId: '', amount: 0, isLocked: false }]
+      additionalFunding: [...(prev.additionalFunding || []), { entityId: '', amount: 0, isLocked: false }]
     }));
   };
 
   const removeAdditionalFunding = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      additionalFunding: prev.additionalFunding.filter((_, i) => i !== index)
+      additionalFunding: (prev.additionalFunding || []).filter((_, i) => i !== index)
     }));
   };
 
@@ -151,7 +228,23 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
 
     try {
       const selectionRef = doc(db, 'startupsSelections', selectedSelectionId);
-      await updateDoc(selectionRef, formData);
+      
+      // Clean up the data before sending to Firebase
+      const cleanData = {
+        ...formData,
+        campaigns: formData.campaigns || [],
+        startupProportions: formData.startupProportions || [],
+        additionalFunding: formData.additionalFunding || [],
+        // Only include debtTerms if it's debt type
+        ...(formData.investmentType === InvestmentType.DEBT && formData.debtTerms
+          ? { debtTerms: formData.debtTerms }
+          : { debtTerms: null }) // Explicitly set to null if not debt type
+      };
+
+      // Remove any remaining undefined values
+      const finalData = removeUndefined(cleanData);
+
+      await updateDoc(selectionRef, finalData);
       setSaving(false);
       setSuccessMessage('Startup selection updated successfully!');
       setTimeout(() => {
@@ -163,7 +256,8 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
         }
       }, 2000);
     } catch (err) {
-      setError('Failed to update startup selection');
+      console.error('Error updating startup selection:', err);
+      setError('Failed to update startup selection. Please try again.');
       setSaving(false);
     }
   };
@@ -177,7 +271,11 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
   };
 
   if (loading) {
-    return <div className="loading">Loading startup selections...</div>;
+    return <div className="loading">Loading...</div>;
+  }
+
+  if (error && !selections.length) {
+    return <div className="error-message">{error}</div>;
   }
 
   return (
@@ -197,6 +295,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
               onChange={(e) => handleSelectionSelect(e.target.value)}
               required
               className="form-select"
+              disabled={loading}
             >
               <option value="">Select a startup selection</option>
               {selections.map(selection => (
@@ -208,7 +307,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
           </div>
         </div>
 
-        {selectedSelectionId && (
+        {selectedSelectionId && !loading && (
           <>
             {/* Basic Information */}
             <div className="form-section">
@@ -248,7 +347,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
                 <label>Investment Type *</label>
                 <select
                   value={formData.investmentType}
-                  onChange={(e) => handleInputChange('investmentType', e.target.value)}
+                  onChange={(e) => handleInputChange('investmentType', e.target.value as InvestmentType)}
                   required
                   className="form-select"
                 >
@@ -264,7 +363,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
                     <label>Interest Rate (%)</label>
                     <input
                       type="number"
-                      value={formData.debtTerms?.interestRate || ''}
+                      value={formData.debtTerms?.interestRate || 0}
                       onChange={(e) => handleInputChange('debtTerms', {
                         ...formData.debtTerms,
                         interestRate: Number(e.target.value)
@@ -278,7 +377,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
                     <label>Maturity (Months)</label>
                     <input
                       type="number"
-                      value={formData.debtTerms?.maturityMonths || ''}
+                      value={formData.debtTerms?.maturityMonths || 0}
                       onChange={(e) => handleInputChange('debtTerms', {
                         ...formData.debtTerms,
                         maturityMonths: Number(e.target.value)
@@ -361,7 +460,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
             {/* Startup Proportions */}
             <div className="form-section">
               <h3>Startup Proportions</h3>
-              {formData.startupProportions.map((proportion, index) => (
+              {(formData.startupProportions || []).map((proportion, index) => (
                 <div key={index} className="form-subsection">
                   <div className="form-group">
                     <label>Campaign ID *</label>
@@ -407,7 +506,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
             {/* Additional Funding */}
             <div className="form-section">
               <h3>Additional Funding</h3>
-              {formData.additionalFunding.map((funding, index) => (
+              {(formData.additionalFunding || []).map((funding, index) => (
                 <div key={index} className="form-subsection">
                   <div className="form-group">
                     <label>Additional Funding Entity *</label>
