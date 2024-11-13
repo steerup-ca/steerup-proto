@@ -21,6 +21,7 @@ import LeadInvestorDetailPage from './components/LeadInvestorDetailPage';
 import AdditionalFundingDetailPage from './components/AdditionalFundingDetailPage';
 import LandingPage from './components/LandingPage';
 import CoInvestPage from './components/CoInvestPage';
+import CoLendPage from './components/CoLendPage';
 import ProfilePage from './components/ProfilePage';
 import PortfolioPage from './components/PortfolioPage';
 import KYCFlow from './components/KYC/KYCFlow';
@@ -41,6 +42,7 @@ function App() {
           <Route path="/lead-investor/:id" element={<LeadInvestorDetailPage />} />
           <Route path="/additional-funding/:id" element={<AdditionalFundingDetailPage />} />
           <Route path="/co-invest/:id" element={<CoInvestPage />} />
+          <Route path="/co-lend/:id" element={<CoLendPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/kyc" element={<KYCFlow />} />

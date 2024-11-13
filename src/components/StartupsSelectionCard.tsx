@@ -48,8 +48,9 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
     ? Math.min((selection.currentAmount / selection.goal) * 100, 100)
     : 0;
 
-  const handleCoInvest = () => {
-    navigate(`/co-invest/${selection.id}`);
+  const handleInvestmentClick = () => {
+    const route = isDebt ? 'co-lend' : 'co-invest';
+    navigate(`/${route}/${selection.id}`);
   };
 
   const handleShare = () => {
@@ -162,7 +163,7 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
 
         <div className="flex gap-2 mb-5">
           <button 
-            onClick={handleCoInvest}
+            onClick={handleInvestmentClick}
             className="flex-1 text-white py-3 rounded-lg font-semibold transition-colors duration-200 text-lg"
             style={{
               backgroundColor: `var(--${isDebt ? 'debt' : 'equity'}-accent-color)`,

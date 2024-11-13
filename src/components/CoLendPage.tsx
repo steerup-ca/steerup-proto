@@ -32,7 +32,7 @@ const objectToArray = (obj: any) => {
   return Object.values(obj);
 };
 
-const CoInvestPage: React.FC = () => {
+const CoLendPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [selection, setSelection] = useState<StartupsSelection | null>(null);
@@ -134,7 +134,12 @@ const CoInvestPage: React.FC = () => {
           currentAmount: selectionData.currentAmount || 0,
           daysLeft: selectionData.daysLeft || 0,
           backersCount: selectionData.backersCount || 0,
-          investmentType: InvestmentType.EQUITY
+          investmentType: InvestmentType.DEBT,
+          debtTerms: selectionData.debtTerms || {
+            interestRate: 0,
+            maturityMonths: 0,
+            paymentSchedule: 'monthly'
+          }
         };
 
         setSelection(formattedSelection);
@@ -278,19 +283,19 @@ const CoInvestPage: React.FC = () => {
         <div className="space-y-8">
           <InvestmentForm
             selection={selection}
-            investmentType="equity"
+            investmentType="debt"
             onInvestClick={() => setIsAllocationModalOpen(true)}
           />
 
           <InvestmentSummary
             selection={selection}
-            investmentType="equity"
+            investmentType="debt"
           />
 
           <AdditionalFunding
             entities={fundingEntities}
             funding={selection.additionalFunding}
-            investmentType="equity"
+            investmentType="debt"
           />
         </div>
 
@@ -298,13 +303,13 @@ const CoInvestPage: React.FC = () => {
         <div className="space-y-8">
           <FeaturedStartups
             startups={startups}
-            investmentType="equity"
+            investmentType="debt"
           />
 
           {selectionLead && (
             <SelectionLead
               lead={selectionLead}
-              investmentType="equity"
+              investmentType="debt"
             />
           )}
         </div>
@@ -316,7 +321,7 @@ const CoInvestPage: React.FC = () => {
           to={`/prospectus/${id}`} 
           className="inline-flex items-center justify-center px-6 py-3 rounded-full text-white hover:opacity-90 transition-opacity"
           style={{
-            backgroundColor: 'var(--equity-accent-color)',
+            backgroundColor: 'var(--debt-accent-color)',
             color: 'var(--button-text-color)',
             borderRadius: 'var(--button-border-radius)',
             boxShadow: 'var(--box-shadow)'
@@ -349,4 +354,4 @@ const CoInvestPage: React.FC = () => {
   );
 };
 
-export default CoInvestPage;
+export default CoLendPage;
