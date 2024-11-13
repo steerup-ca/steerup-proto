@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { StartupsSelection, LeadInvestor, Startup, Investment, Campaign, AdditionalFundingEntity, InvestmentType } from '../types';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { StartupsSelection, LeadInvestor, Startup, Campaign, AdditionalFundingEntity, InvestmentType } from '../types';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 interface StartupsSelectionCardProps {
@@ -12,8 +12,6 @@ interface StartupsSelectionCardProps {
 }
 
 const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection, leadInvestor, startups, campaigns }) => {
-  const [totalRaised, setTotalRaised] = useState<number>(0);
-  const [backersCount, setBackersCount] = useState<number>(0);
   const [fundingEntities, setFundingEntities] = useState<Record<string, AdditionalFundingEntity>>({});
   const navigate = useNavigate();
 
@@ -22,17 +20,6 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch investment data
-        const investmentsQuery = query(collection(db, 'investments'), where('selectionId', '==', selection.id));
-        const investmentsSnap = await getDocs(investmentsQuery);
-        const investments = investmentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Investment);
-
-        const total = investments.reduce((sum, inv) => sum + inv.amount, 0);
-        const uniqueBackers = new Set(investments.map(inv => inv.userId)).size;
-
-        setTotalRaised(total);
-        setBackersCount(uniqueBackers);
-
         // Fetch additional funding entities
         const entityIds = selection.additionalFunding.map(f => f.entityId);
         const entities: Record<string, AdditionalFundingEntity> = {};
@@ -51,9 +38,9 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
     };
 
     fetchData();
-  }, [selection.id, selection.additionalFunding]);
+  }, [selection.additionalFunding]);
 
-  const progressPercentage = (totalRaised / selection.goal) * 100;
+  const progressPercentage = (selection.currentAmount / selection.goal) * 100;
 
   const handleCoInvest = () => {
     navigate(`/co-invest/${selection.id}`);
@@ -134,7 +121,7 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
         <div className="mb-5">
           <div className="flex justify-between text-sm mb-2 text-white">
             <span>Goal: ${selection.goal.toLocaleString()}</span>
-            <span>${totalRaised.toLocaleString()}</span>
+            <span>${selection.currentAmount.toLocaleString()}</span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-4">
             <div
@@ -147,7 +134,7 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
           </div>
           <div className="flex justify-between text-sm mt-2 text-gray-300">
             <span>{progressPercentage.toFixed(0)}%</span>
-            <span>{backersCount} BACKERS • {selection.daysLeft} DAYS LEFT</span>
+            <span>{selection.backersCount} BACKERS • {selection.daysLeft} DAYS LEFT</span>
           </div>
         </div>
 
