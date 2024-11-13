@@ -10,7 +10,8 @@ import {
   User,
   KYCStatus,
   AccreditationStatus,
-  InvestmentType
+  InvestmentType,
+  StartupProportion
 } from '../types';
 import { doc, getDoc, addDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -18,6 +19,13 @@ import InvestmentModal from './InvestmentModal';
 import InvestmentAllocationModal from './InvestmentAllocationModal';
 import InvestmentAllocationChart from './InvestmentAllocationChart';
 import '../styles/DetailPage.css';
+
+// Helper function to convert object to array
+const objectToArray = (obj: any) => {
+  if (!obj) return [];
+  if (Array.isArray(obj)) return obj;
+  return Object.values(obj);
+};
 
 const CoInvestPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -57,68 +65,184 @@ const CoInvestPage: React.FC = () => {
     primaryBankAccountId: null
   };
 
+  // Helper function to recalculate proportions based on campaigns
+  const recalculateProportions = (campaignsData: Campaign[]): StartupProportion[] => {
+    const totalAmount = campaignsData.reduce((sum, campaign) => sum + (campaign.steerup_amount || 0), 0);
+    if (totalAmount === 0) return [];
+
+    return campaignsData.map(campaign => ({
+      campaignId: campaign.id,
+      proportion: ((campaign.steerup_amount || 0) / totalAmount) * 100
+    }));
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      if (id) {
-        try {
-          // Fetch selection
-          const selectionRef = doc(db, 'startupsSelections', id);
-          const selectionSnap = await getDoc(selectionRef);
-          if (selectionSnap.exists()) {
-            const selectionData = { id: selectionSnap.id, ...selectionSnap.data() } as StartupsSelection;
-            setSelection(selectionData);
-
-            // Fetch campaigns
-            const campaignPromises = selectionData.campaigns.map(campaignId => 
-              getDoc(doc(db, 'campaigns', campaignId))
-            );
-            const campaignSnaps = await Promise.all(campaignPromises);
-            const campaignsData = campaignSnaps
-              .filter(snap => snap.exists())
-              .map(snap => ({ id: snap.id, ...snap.data() }) as Campaign);
-            setCampaigns(campaignsData);
-
-            // Fetch startups
-            const startupIds = campaignsData.map(campaign => campaign.startupId);
-            const startupPromises = startupIds.map(startupId => 
-              getDoc(doc(db, 'startups', startupId))
-            );
-            const startupSnaps = await Promise.all(startupPromises);
-            const startupsData = startupSnaps
-              .filter(snap => snap.exists())
-              .map(snap => ({ id: snap.id, ...snap.data() }) as Startup);
-            setStartups(startupsData);
-
-            // Fetch selection lead
-            if (selectionData.selectionLead) {
-              const leadRef = doc(db, 'leadInvestors', selectionData.selectionLead);
-              const leadSnap = await getDoc(leadRef);
-              if (leadSnap.exists()) {
-                setSelectionLead({ id: leadSnap.id, ...leadSnap.data() } as LeadInvestor);
-              }
-            }
-
-            // Fetch additional funding entities
-            const entityIds = selectionData.additionalFunding.map(f => f.entityId);
-            const entities: Record<string, AdditionalFundingEntity> = {};
-            
-            for (const entityId of entityIds) {
-              const entityDoc = await getDoc(doc(db, 'additionalFundingEntities', entityId));
-              if (entityDoc.exists()) {
-                entities[entityId] = { id: entityDoc.id, ...entityDoc.data() } as AdditionalFundingEntity;
-              }
-            }
-            
-            setFundingEntities(entities);
-          } else {
-            setError('Selection not found');
-          }
-        } catch (error) {
-          console.error('Error fetching data:', error);
-          setError('Error fetching data. Please try again.');
-        }
+      if (!id) {
+        console.error('No selection ID provided');
+        setError('Invalid selection ID');
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        console.log('Fetching selection with ID:', id);
+        
+        // Fetch selection
+        const selectionRef = doc(db, 'startupsSelections', id);
+        const selectionSnap = await getDoc(selectionRef);
+        
+        if (!selectionSnap.exists()) {
+          console.error('Selection document not found:', id);
+          setError('Selection not found');
+          setLoading(false);
+          return;
+        }
+
+        const selectionData = selectionSnap.data();
+        console.log('Raw selection data:', selectionData);
+
+        // Convert campaigns object to array
+        const campaignIds = objectToArray(selectionData.campaigns);
+        if (!campaignIds || campaignIds.length === 0) {
+          console.error('Invalid campaigns data:', selectionData.campaigns);
+          setError('Invalid selection data: missing campaigns array');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch campaigns
+        const campaignPromises = campaignIds.map(async campaignId => {
+          try {
+            const campaignRef = doc(db, 'campaigns', campaignId);
+            const campaignSnap = await getDoc(campaignRef);
+            if (!campaignSnap.exists()) {
+              console.error(`Campaign ${campaignId} not found`);
+              return null;
+            }
+            return { id: campaignSnap.id, ...campaignSnap.data() } as Campaign;
+          } catch (error) {
+            console.error(`Error fetching campaign ${campaignId}:`, error);
+            return null;
+          }
+        });
+
+        const campaignsData = (await Promise.all(campaignPromises)).filter((campaign): campaign is Campaign => 
+          campaign !== null && 
+          campaign.startupId !== undefined && 
+          campaign.offeringDetails !== undefined
+        );
+
+        if (campaignsData.length === 0) {
+          console.error('No valid campaigns found');
+          setError('No valid campaigns found for this selection');
+          setLoading(false);
+          return;
+        }
+
+        console.log('Fetched campaigns:', campaignsData);
+        setCampaigns(campaignsData);
+
+        // Convert other object fields to arrays
+        const additionalFundingArray = objectToArray(selectionData.additionalFunding);
+        const startupProportionsArray = objectToArray(selectionData.startupProportions);
+
+        // Format selection data
+        const formattedSelection: StartupsSelection = {
+          id: selectionSnap.id,
+          title: selectionData.title || '',
+          description: selectionData.description || '',
+          selectionLead: selectionData.selectionLead || '',
+          campaigns: campaignsData.map(c => c.id),
+          startupProportions: startupProportionsArray,
+          additionalFunding: additionalFundingArray,
+          goal: selectionData.goal || 0,
+          currentAmount: selectionData.currentAmount || 0,
+          daysLeft: selectionData.daysLeft || 0,
+          backersCount: selectionData.backersCount || 0,
+          investmentType: selectionData.investmentType || InvestmentType.EQUITY,
+          ...(selectionData.investmentType === InvestmentType.DEBT && selectionData.debtTerms ? {
+            debtTerms: {
+              interestRate: Number(selectionData.debtTerms.interestRate || 0),
+              maturityMonths: Number(selectionData.debtTerms.maturityMonths || 0),
+              paymentSchedule: selectionData.debtTerms.paymentSchedule || 'monthly'
+            }
+          } : {})
+        };
+
+        console.log('Formatted selection:', formattedSelection);
+        setSelection(formattedSelection);
+
+        // Fetch startups
+        const startupIds = campaignsData.map(campaign => campaign.startupId);
+        console.log('Fetching startups:', startupIds);
+        const startupPromises = startupIds.map(async startupId => {
+          try {
+            const startupRef = doc(db, 'startups', startupId);
+            const startupSnap = await getDoc(startupRef);
+            if (!startupSnap.exists()) {
+              console.error(`Startup ${startupId} not found`);
+              return null;
+            }
+            return { id: startupSnap.id, ...startupSnap.data() } as Startup;
+          } catch (error) {
+            console.error(`Error fetching startup ${startupId}:`, error);
+            return null;
+          }
+        });
+
+        const startupsData = (await Promise.all(startupPromises)).filter((startup): startup is Startup => startup !== null);
+
+        if (startupsData.length === 0) {
+          console.error('No valid startups found');
+          setError('No valid startups found for this selection');
+          setLoading(false);
+          return;
+        }
+
+        console.log('Fetched startups:', startupsData);
+        setStartups(startupsData);
+
+        // Fetch selection lead
+        if (formattedSelection.selectionLead) {
+          console.log('Fetching selection lead:', formattedSelection.selectionLead);
+          const leadRef = doc(db, 'leadInvestors', formattedSelection.selectionLead);
+          const leadSnap = await getDoc(leadRef);
+          if (leadSnap.exists()) {
+            const leadData = { id: leadSnap.id, ...leadSnap.data() } as LeadInvestor;
+            console.log('Fetched lead investor:', leadData);
+            setSelectionLead(leadData);
+          } else {
+            console.warn('Lead investor document not found:', formattedSelection.selectionLead);
+          }
+        }
+
+        // Fetch additional funding entities
+        const entityIds = formattedSelection.additionalFunding.map(f => f.entityId);
+        console.log('Fetching additional funding entities:', entityIds);
+        const entities: Record<string, AdditionalFundingEntity> = {};
+        
+        for (const entityId of entityIds) {
+          try {
+            const entityDoc = await getDoc(doc(db, 'additionalFundingEntities', entityId));
+            if (entityDoc.exists()) {
+              const entityData = entityDoc.data();
+              console.log('Entity data:', entityId, entityData);
+              entities[entityId] = { id: entityDoc.id, ...entityData } as AdditionalFundingEntity;
+            }
+          } catch (error) {
+            console.error(`Error fetching funding entity ${entityId}:`, error);
+          }
+        }
+        console.log('Fetched funding entities:', entities);
+        setFundingEntities(entities);
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Error fetching data. Please try again.');
+        setLoading(false);
+      }
     };
 
     fetchData();
@@ -143,6 +267,7 @@ const CoInvestPage: React.FC = () => {
         };
 
         const docRef = await addDoc(collection(db, 'investments'), newInvestment);
+        console.log('Created new investment:', docRef.id);
 
         setSelection(prevSelection => {
           if (prevSelection) {
@@ -174,11 +299,31 @@ const CoInvestPage: React.FC = () => {
   }
 
   if (error) {
-    return <div className="text-center text-2xl mt-10 text-text-color">{error}</div>;
+    return (
+      <div className="text-center text-2xl mt-10 text-text-color">
+        <div>{error}</div>
+        <button 
+          onClick={() => navigate('/explore')}
+          className="mt-4 px-6 py-2 bg-primary-color text-white rounded-lg hover:opacity-90"
+        >
+          Back to Explore
+        </button>
+      </div>
+    );
   }
 
   if (!selection) {
-    return <div className="text-center text-2xl mt-10 text-text-color">Selection not found</div>;
+    return (
+      <div className="text-center text-2xl mt-10 text-text-color">
+        <div>Selection not found</div>
+        <button 
+          onClick={() => navigate('/explore')}
+          className="mt-4 px-6 py-2 bg-primary-color text-white rounded-lg hover:opacity-90"
+        >
+          Back to Explore
+        </button>
+      </div>
+    );
   }
 
   const getInvestmentDescription = () => {
@@ -242,7 +387,7 @@ const CoInvestPage: React.FC = () => {
               </div>
 
               {/* Allocation Chart */}
-              {selection.startupProportions && (
+              {selection.startupProportions && selection.startupProportions.length > 0 && (
                 <div className="mt-4">
                   <InvestmentAllocationChart
                     startups={startups}

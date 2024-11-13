@@ -12,13 +12,18 @@ const InvestmentAllocationChart: React.FC<Props> = ({
   proportions,
   campaigns
 }) => {
+  // Create campaign to startup mapping
   const campaignToStartupMap = campaigns.reduce((map, campaign) => {
-    map[campaign.id] = campaign.startupId;
+    if (campaign && campaign.id && campaign.startupId) {
+      map[campaign.id] = campaign.startupId;
+    }
     return map;
   }, {} as Record<string, string>);
 
   // Calculate total goal from campaigns' steerup amounts
-  const totalGoal = campaigns.reduce((sum, campaign) => sum + campaign.steerup_amount, 0);
+  const totalGoal = campaigns.reduce((sum, campaign) => {
+    return sum + (campaign?.steerup_amount || 0);
+  }, 0);
 
   const chartData = proportions.map((p, index) => {
     const startupId = campaignToStartupMap[p.campaignId];
@@ -26,13 +31,13 @@ const InvestmentAllocationChart: React.FC<Props> = ({
     const campaign = campaigns.find(c => c.id === p.campaignId);
     
     // Calculate amount based on the campaign's steerup_amount
-    const amount = campaign ? campaign.steerup_amount : 0;
+    const amount = campaign?.steerup_amount || 0;
     // Calculate proportion based on actual amount relative to total
     const calculatedProportion = totalGoal > 0 ? (amount / totalGoal) * 100 : 0;
     
     return {
       name: startup?.name || 'Unknown',
-      value: calculatedProportion, // Use calculated proportion instead of provided proportion
+      value: calculatedProportion,
       amount: amount,
       color: [
         'var(--primary-color)',

@@ -25,9 +25,13 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
         const entities: Record<string, AdditionalFundingEntity> = {};
         
         for (const entityId of entityIds) {
-          const entityDoc = await getDoc(doc(db, 'additionalFundingEntities', entityId));
-          if (entityDoc.exists()) {
-            entities[entityId] = { id: entityDoc.id, ...entityDoc.data() } as AdditionalFundingEntity;
+          try {
+            const entityDoc = await getDoc(doc(db, 'additionalFundingEntities', entityId));
+            if (entityDoc.exists()) {
+              entities[entityId] = { id: entityDoc.id, ...entityDoc.data() } as AdditionalFundingEntity;
+            }
+          } catch (error) {
+            console.error(`Error fetching funding entity ${entityId}:`, error);
           }
         }
         
@@ -40,7 +44,9 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
     fetchData();
   }, [selection.additionalFunding]);
 
-  const progressPercentage = (selection.currentAmount / selection.goal) * 100;
+  const progressPercentage = selection.goal > 0 
+    ? Math.min((selection.currentAmount / selection.goal) * 100, 100)
+    : 0;
 
   const handleCoInvest = () => {
     navigate(`/co-invest/${selection.id}`);
@@ -96,7 +102,15 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
         <div className="mb-5">
           <h3 className="text-base font-semibold mb-2 text-gray-300">SELECTION LEAD</h3>
           <Link to={`/lead-investor/${leadInvestor.id}`} className="flex items-center">
-            <img src={leadInvestor.photo} alt={leadInvestor.name} className="w-12 h-12 rounded-full mr-4" />
+            <img 
+              src={leadInvestor.photo} 
+              alt={leadInvestor.name} 
+              className="w-12 h-12 rounded-full mr-4"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/default-avatar.png';
+              }}
+            />
             <div>
               <p className="font-semibold text-white">{leadInvestor.name}</p>
               <p className="text-sm text-gray-300">{leadInvestor.bio}</p>
@@ -107,7 +121,15 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
         <div className="grid grid-cols-2 gap-4 mb-6">
           {startups.map((startup) => (
             <Link key={startup.id} to={`/startup/${startup.id}`} className="relative overflow-hidden rounded-lg" style={{ height: '160px' }}>
-              <img src={startup.imageUrl} alt={startup.name} className="w-full h-full object-cover" />
+              <img 
+                src={startup.imageUrl} 
+                alt={startup.name} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/default-startup.png';
+                }}
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent">
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <h4 className="font-semibold text-white text-lg mb-1">{startup.name}</h4>
@@ -184,6 +206,10 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
                           src={entity.iconUrl} 
                           alt={entity.name} 
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/default-entity.png';
+                          }}
                         />
                       )}
                     </div>

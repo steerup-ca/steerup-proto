@@ -5,7 +5,8 @@ import {
   Campaign, 
   SecurityAllocation,
   AllocationValidationResult,
-  Startup
+  Startup,
+  InvestmentType
 } from '../types';
 import {
   validateInvestmentAllocations,
@@ -40,13 +41,37 @@ const InvestmentAllocationModal: React.FC<InvestmentAllocationModalProps> = ({
     errors: [] 
   });
 
+  // Calculate step value for the input
+  const getStepValue = (): number => {
+    if (selection.investmentType === InvestmentType.DEBT) {
+      return 100;
+    }
+    // For equity, use the minimum amount from the first campaign
+    const firstCampaign = campaigns[0];
+    return firstCampaign?.offeringDetails?.minAmount || 100;
+  };
+
   // Update allocations and validation whenever amount changes
   useEffect(() => {
+    if (typeof amount !== 'number' || isNaN(amount)) {
+      setValidationResult({ isValid: false, errors: ['Invalid investment amount'] });
+      return;
+    }
+
+    console.log('Validating investment:', {
+      amount,
+      selection,
+      campaigns,
+      investmentType: selection.investmentType
+    });
+
     const validation = validateInvestmentAllocations(user, selection, campaigns, amount);
+    console.log('Validation result:', validation);
     setValidationResult(validation);
     
     if (validation.isValid) {
       const newAllocations = calculateInvestmentAllocations(user, selection, campaigns, amount);
+      console.log('New allocations:', newAllocations);
       setAllocations(newAllocations);
     } else {
       setAllocations([]);
@@ -56,53 +81,63 @@ const InvestmentAllocationModal: React.FC<InvestmentAllocationModalProps> = ({
   // Helper function to get startup name
   const getStartupName = (startupId: string): string => {
     const startup = startups.find(s => s.id === startupId);
-    return startup ? startup.name : startupId;
+    return startup?.name || 'Unknown';
   };
 
-  // Calculate total actual investment based on whole securities
-  const totalActualInvestment = allocations.reduce((sum, a) => sum + a.maxPrice, 0);
+  // Calculate total actual investment based on allocations
+  const totalActualInvestment = allocations.reduce((sum, a) => sum + (a.maxPrice || 0), 0);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAmount = Number(e.target.value);
-    if (!isNaN(newAmount)) {
+    if (!isNaN(newAmount) && newAmount >= 0) {
       setAmount(newAmount);
     }
   };
 
   if (!isOpen) return null;
 
+  const isDebt = selection.investmentType === InvestmentType.DEBT;
+
   return (
     <div className="fixed inset-0 z-50 overflow-auto bg-smoke-light flex items-center justify-center">
       <div className="fixed inset-0 bg-black opacity-75 backdrop-blur-sm"></div>
       <div className="relative bg-card-bg-color w-full max-w-lg m-auto flex-col flex rounded-lg shadow-2xl">
         <div className="p-8">
-          <h2 className="text-3xl font-bold mb-6 text-primary-color">Investment Allocation</h2>
+          <h2 className="text-3xl font-bold mb-6 text-primary-color">
+            {isDebt ? 'Lending' : 'Investment'} Allocation
+          </h2>
           
           {/* Minimum Investment Info */}
           <div className="mb-6 p-4 bg-secondary-bg-color rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">Minimum Investment Required</h3>
+            <h3 className="text-lg font-semibold mb-2">Minimum {isDebt ? 'Lending' : 'Investment'} Required</h3>
             <p className="text-sm mb-2">
-              The minimum investment for this selection is ${minimumInvestment.toLocaleString()}.
+              The minimum {isDebt ? 'lending amount' : 'investment'} for this selection is ${minimumInvestment.toLocaleString()}.
             </p>
-            <p className="text-sm opacity-75">
-              This amount covers the minimum security price for each startup in the selection:
-            </p>
-            <ul className="text-sm mt-2 space-y-1 opacity-75">
-              {campaigns.map(campaign => (
-                <li key={campaign.id}>
-                  • {getStartupName(campaign.startupId)}: ${campaign.offeringDetails.minAmount.toLocaleString()} per security
-                </li>
-              ))}
-            </ul>
+            {!isDebt && (
+              <>
+                <p className="text-sm opacity-75">
+                  This amount covers the minimum security price for each startup in the selection:
+                </p>
+                <ul className="text-sm mt-2 space-y-1 opacity-75">
+                  {campaigns.map(campaign => (
+                    <li key={campaign.id}>
+                      • {getStartupName(campaign.startupId)}: ${campaign.offeringDetails.minAmount.toLocaleString()} per security
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
 
           {/* Investment Amount Input */}
           <div className="mb-6">
-            <label className="block text-lg mb-2">Investment Amount ($)</label>
+            <label className="block text-lg mb-2">
+              {isDebt ? 'Lending' : 'Investment'} Amount ($)
+            </label>
             <input
               type="number"
               min={minimumInvestment}
-              step="100"
+              step={getStepValue()}
               value={amount}
               onChange={handleAmountChange}
               className="w-full p-3 border rounded-lg bg-input-bg-color text-lg"
@@ -134,13 +169,21 @@ const InvestmentAllocationModal: React.FC<InvestmentAllocationModalProps> = ({
           {/* Allocations Display */}
           {validationResult.isValid && allocations.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-xl font-semibold mb-3">Investment Breakdown</h3>
+              <h3 className="text-xl font-semibold mb-3">
+                {isDebt ? 'Lending' : 'Investment'} Breakdown
+              </h3>
               <div className="space-y-4">
                 {allocations.map((allocation) => {
+                  if (!allocation?.startupId) return null;
+
                   const campaign = campaigns.find(c => c.startupId === allocation.startupId);
                   const startupName = getStartupName(allocation.startupId);
-                  const targetProportion = campaign ? (campaign.steerup_amount / selection.goal) * 100 : 0;
-                  const actualProportion = (allocation.maxPrice / totalActualInvestment) * 100;
+                  const targetProportion = campaign && selection.goal > 0 
+                    ? (campaign.steerup_amount / selection.goal) * 100 
+                    : 0;
+                  const actualProportion = totalActualInvestment > 0 
+                    ? ((allocation.maxPrice || 0) / totalActualInvestment) * 100 
+                    : 0;
 
                   return (
                     <div key={allocation.startupId} className="p-4 bg-secondary-bg-color rounded-lg">
@@ -150,17 +193,21 @@ const InvestmentAllocationModal: React.FC<InvestmentAllocationModalProps> = ({
                         <div>{targetProportion.toFixed(1)}%</div>
                         <div>Actual Proportion:</div>
                         <div>{actualProportion.toFixed(1)}%</div>
-                        <div>Securities:</div>
-                        <div>{allocation.maxSecurities.toLocaleString()} @ ${allocation.securityPrice.toLocaleString()}</div>
+                        {!isDebt && (
+                          <>
+                            <div>Securities:</div>
+                            <div>{allocation.maxSecurities.toLocaleString()} @ ${allocation.securityPrice.toLocaleString()}</div>
+                          </>
+                        )}
                         <div>Total Amount:</div>
-                        <div>${allocation.maxPrice.toLocaleString()}</div>
+                        <div>${(allocation.maxPrice || 0).toLocaleString()}</div>
                       </div>
                     </div>
                   );
                 })}
                 <div className="p-4 bg-primary-color bg-opacity-10 rounded-lg">
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="font-semibold">Total Investment:</div>
+                    <div className="font-semibold">Total {isDebt ? 'Lending' : 'Investment'}:</div>
                     <div className="font-semibold">${totalActualInvestment.toLocaleString()}</div>
                   </div>
                 </div>

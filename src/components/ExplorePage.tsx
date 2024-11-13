@@ -5,8 +5,6 @@ import { StartupsSelection, LeadInvestor, Startup, Campaign, InvestmentType } fr
 import StartupsSelectionCard from './StartupsSelectionCard';
 import { mockSelections, mockLeadInvestors, mockStartups, mockCampaigns } from '../mockData';
 
-// Set to true to use mock data, false to use Firebase
-const USE_MOCK_DATA = false;
 
 // Helper function to convert object to array
 const objectToArray = (obj: any) => {
@@ -28,16 +26,6 @@ const ExplorePage: React.FC = () => {
       try {
         setIsLoading(true);
         setError(null);
-
-        if (USE_MOCK_DATA) {
-          // Use mock data
-          setStartupsSelections(mockSelections);
-          setLeadInvestors(mockLeadInvestors);
-          setStartups(mockStartups);
-          setCampaigns(mockCampaigns);
-          setIsLoading(false);
-          return;
-        }
 
         // Fetch startups selections from Firebase
         const selectionsQuery = query(collection(db, 'startupsSelections'), orderBy('daysLeft'));
