@@ -70,7 +70,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
           id: doc.id,
           ...doc.data(),
           campaigns: doc.data().campaigns || [],
-          startupProportions: doc.data().startupProportions || [],
+          startupProportions: Array.isArray(doc.data().startupProportions) ? doc.data().startupProportions : [],
           additionalFunding: doc.data().additionalFunding || []
         })) as StartupsSelection[];
 
@@ -113,20 +113,20 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
         throw new Error('Selected startup selection not found');
       }
 
-      const data = selectionDoc.data() as Omit<StartupsSelection, 'id'>;
+      const data = selectionDoc.data();
       
       // Ensure all arrays are initialized even if undefined in the data
       const formattedData: StartupSelectionFormData = {
         title: data.title || '',
         description: data.description || '',
         selectionLead: data.selectionLead || '',
-        campaigns: data.campaigns || [],
-        startupProportions: data.startupProportions || [],
+        campaigns: Array.isArray(data.campaigns) ? data.campaigns : [],
+        startupProportions: Array.isArray(data.startupProportions) ? data.startupProportions : [],
         goal: data.goal || 0,
         currentAmount: data.currentAmount || 0,
         daysLeft: data.daysLeft || 0,
         backersCount: data.backersCount || 0,
-        additionalFunding: data.additionalFunding || [],
+        additionalFunding: Array.isArray(data.additionalFunding) ? data.additionalFunding : [],
         investmentType: data.investmentType || InvestmentType.EQUITY,
         debtTerms: data.investmentType === InvestmentType.DEBT 
           ? { ...defaultDebtTerms, ...data.debtTerms }
@@ -173,46 +173,50 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
   const handleStartupProportionChange = (index: number, field: keyof StartupProportion, value: any) => {
     setFormData(prev => ({
       ...prev,
-      startupProportions: (prev.startupProportions || []).map((prop, i) => 
-        i === index ? { ...prop, [field]: value } : prop
-      )
+      startupProportions: Array.isArray(prev.startupProportions) 
+        ? prev.startupProportions.map((prop, i) => i === index ? { ...prop, [field]: value } : prop)
+        : []
     }));
   };
 
   const handleAdditionalFundingChange = (index: number, field: keyof CampaignAdditionalFunding, value: any) => {
     setFormData(prev => ({
       ...prev,
-      additionalFunding: (prev.additionalFunding || []).map((funding, i) => 
-        i === index ? { ...funding, [field]: value } : funding
-      )
+      additionalFunding: Array.isArray(prev.additionalFunding)
+        ? prev.additionalFunding.map((funding, i) => i === index ? { ...funding, [field]: value } : funding)
+        : []
     }));
   };
 
   const addStartupProportion = () => {
     setFormData(prev => ({
       ...prev,
-      startupProportions: [...(prev.startupProportions || []), { campaignId: '', proportion: 0 }]
+      startupProportions: [...(Array.isArray(prev.startupProportions) ? prev.startupProportions : []), { campaignId: '', proportion: 0 }]
     }));
   };
 
   const removeStartupProportion = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      startupProportions: (prev.startupProportions || []).filter((_, i) => i !== index)
+      startupProportions: Array.isArray(prev.startupProportions)
+        ? prev.startupProportions.filter((_, i) => i !== index)
+        : []
     }));
   };
 
   const addAdditionalFunding = () => {
     setFormData(prev => ({
       ...prev,
-      additionalFunding: [...(prev.additionalFunding || []), { entityId: '', amount: 0, isLocked: false }]
+      additionalFunding: [...(Array.isArray(prev.additionalFunding) ? prev.additionalFunding : []), { entityId: '', amount: 0, isLocked: false }]
     }));
   };
 
   const removeAdditionalFunding = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      additionalFunding: (prev.additionalFunding || []).filter((_, i) => i !== index)
+      additionalFunding: Array.isArray(prev.additionalFunding)
+        ? prev.additionalFunding.filter((_, i) => i !== index)
+        : []
     }));
   };
 
@@ -232,9 +236,9 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
       // Clean up the data before sending to Firebase
       const cleanData = {
         ...formData,
-        campaigns: formData.campaigns || [],
-        startupProportions: formData.startupProportions || [],
-        additionalFunding: formData.additionalFunding || [],
+        campaigns: Array.isArray(formData.campaigns) ? formData.campaigns : [],
+        startupProportions: Array.isArray(formData.startupProportions) ? formData.startupProportions : [],
+        additionalFunding: Array.isArray(formData.additionalFunding) ? formData.additionalFunding : [],
         // Only include debtTerms if it's debt type
         ...(formData.investmentType === InvestmentType.DEBT && formData.debtTerms
           ? { debtTerms: formData.debtTerms }
@@ -460,7 +464,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
             {/* Startup Proportions */}
             <div className="form-section">
               <h3>Startup Proportions</h3>
-              {(formData.startupProportions || []).map((proportion, index) => (
+              {(Array.isArray(formData.startupProportions) ? formData.startupProportions : []).map((proportion, index) => (
                 <div key={index} className="form-subsection">
                   <div className="form-group">
                     <label>Campaign ID *</label>
@@ -506,7 +510,7 @@ export const EditStartupSelectionForm: React.FC<EditStartupSelectionFormProps> =
             {/* Additional Funding */}
             <div className="form-section">
               <h3>Additional Funding</h3>
-              {(formData.additionalFunding || []).map((funding, index) => (
+              {(Array.isArray(formData.additionalFunding) ? formData.additionalFunding : []).map((funding, index) => (
                 <div key={index} className="form-subsection">
                   <div className="form-group">
                     <label>Additional Funding Entity *</label>

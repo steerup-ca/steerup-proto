@@ -5,6 +5,12 @@ import { StartupsSelection, LeadInvestor, Campaign, Startup, AdditionalFundingEn
 import '../styles/theme.css';
 
 const AddStartupsSelectionForm: React.FC = () => {
+  const defaultDebtTerms: DebtTerms = {
+    interestRate: 0,
+    maturityMonths: 0,
+    paymentSchedule: 'monthly'
+  };
+
   const [startupsSelection, setStartupsSelection] = useState<Omit<StartupsSelection, 'id'>>({
     title: '',
     selectionLead: '',
@@ -81,11 +87,7 @@ const AddStartupsSelectionForm: React.FC = () => {
       setStartupsSelection(prev => ({
         ...prev,
         investmentType: newType,
-        debtTerms: newType === InvestmentType.DEBT ? {
-          interestRate: 0,
-          maturityMonths: 0,
-          paymentSchedule: 'monthly'
-        } : undefined
+        debtTerms: newType === InvestmentType.DEBT ? { ...defaultDebtTerms } : undefined
       }));
       return;
     }
@@ -95,7 +97,8 @@ const AddStartupsSelectionForm: React.FC = () => {
       setStartupsSelection(prev => ({
         ...prev,
         debtTerms: {
-          ...prev.debtTerms!,
+          ...defaultDebtTerms,
+          ...(prev.debtTerms || {}),
           [field]: field === 'interestRate' || field === 'maturityMonths' ? Number(value) : value
         }
       }));
@@ -154,13 +157,50 @@ const AddStartupsSelectionForm: React.FC = () => {
     }));
   };
 
+  const validateDebtTerms = () => {
+    if (startupsSelection.investmentType === InvestmentType.DEBT) {
+      const debtTerms = startupsSelection.debtTerms;
+      if (!debtTerms) {
+        return false;
+      }
+      return (
+        typeof debtTerms.interestRate === 'number' &&
+        debtTerms.interestRate > 0 &&
+        typeof debtTerms.maturityMonths === 'number' &&
+        debtTerms.maturityMonths > 0 &&
+        ['monthly', 'quarterly', 'annually'].includes(debtTerms.paymentSchedule)
+      );
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccessMessage('');
     setErrorMessage('');
 
+    // Validate debt terms if investment type is DEBT
+    if (!validateDebtTerms()) {
+      setErrorMessage('Please fill in all debt terms fields correctly');
+      return;
+    }
+
     try {
-      const docRef = await addDoc(collection(db, 'startupsSelections'), startupsSelection);
+      // Create a clean copy of the data to submit
+      const dataToSubmit = {
+        ...startupsSelection,
+        debtTerms: startupsSelection.investmentType === InvestmentType.DEBT
+          ? {
+              interestRate: Number(startupsSelection.debtTerms?.interestRate || 0),
+              maturityMonths: Number(startupsSelection.debtTerms?.maturityMonths || 0),
+              paymentSchedule: startupsSelection.debtTerms?.paymentSchedule || 'monthly'
+            }
+          : null
+      };
+
+      console.log('Submitting data:', dataToSubmit); // Debug log
+
+      const docRef = await addDoc(collection(db, 'startupsSelections'), dataToSubmit);
       setSuccessMessage('Startups Selection added successfully!');
       setStartupsSelection({
         title: '',
