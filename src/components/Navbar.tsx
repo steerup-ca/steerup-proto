@@ -43,7 +43,7 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
         backgroundColor: 'var(--card-bg-color)',
         boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.2)',
         zIndex: 40,
-        height: '4.5rem',
+        height: '2.8rem', // Reduced from 3.5rem (20% reduction)
         display: 'none', // Hidden by default, shown via media query
       }} className="mobile-nav">
         <ul style={{
@@ -62,10 +62,10 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
               alignItems: 'center',
               color: 'var(--text-color)',
               textDecoration: 'none',
-              fontSize: 'var(--font-size-xsmall)',
-              padding: '0.5rem'
+              fontSize: 'calc(var(--font-size-xsmall) * 0.9)', // Reduced font size
+              padding: '0.2rem' // Reduced padding
             }}>
-              <span className="material-icons" style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>home</span>
+              <span className="material-icons" style={{ fontSize: '1.2rem', marginBottom: '0.1rem' }}>home</span>
               <span>Home</span>
             </Link>
           </li>
@@ -76,10 +76,10 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
               alignItems: 'center',
               color: 'var(--text-color)',
               textDecoration: 'none',
-              fontSize: 'var(--font-size-xsmall)',
-              padding: '0.5rem'
+              fontSize: 'calc(var(--font-size-xsmall) * 0.9)', // Reduced font size
+              padding: '0.2rem' // Reduced padding
             }}>
-              <span className="material-icons" style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>explore</span>
+              <span className="material-icons" style={{ fontSize: '1.2rem', marginBottom: '0.1rem' }}>explore</span>
               <span>Explore</span>
             </Link>
           </li>
@@ -90,10 +90,10 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
               alignItems: 'center',
               color: 'var(--text-color)',
               textDecoration: 'none',
-              fontSize: 'var(--font-size-xsmall)',
-              padding: '0.5rem'
+              fontSize: 'calc(var(--font-size-xsmall) * 0.9)', // Reduced font size
+              padding: '0.2rem' // Reduced padding
             }}>
-              <span className="material-icons" style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>payments</span>
+              <span className="material-icons" style={{ fontSize: '1.2rem', marginBottom: '0.1rem' }}>payments</span>
               <span>Pricing</span>
             </Link>
           </li>
@@ -105,10 +105,10 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
               color: 'var(--text-color)',
               background: 'none',
               border: 'none',
-              fontSize: 'var(--font-size-xsmall)',
-              padding: '0.5rem'
+              fontSize: 'calc(var(--font-size-xsmall) * 0.9)', // Reduced font size
+              padding: '0.2rem' // Reduced padding
             }}>
-              <span className="material-icons" style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>menu</span>
+              <span className="material-icons" style={{ fontSize: '1.2rem', marginBottom: '0.1rem' }}>menu</span>
               <span>Menu</span>
             </button>
           </li>

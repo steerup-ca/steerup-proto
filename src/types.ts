@@ -381,4 +381,4 @@ export interface InvestmentSummary {
   generatedDate: Timestamp;
 }
 
-export {};
+export { };
