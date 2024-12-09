@@ -72,7 +72,7 @@ const InvestmentInput: React.FC<InvestmentInputProps> = ({
             width: '100%',
             textAlign: 'center',
             color: 'inherit',
-            fontSize: '1.25rem',
+            fontSize: '1.15rem',
             fontWeight: '600',
             paddingRight: '40px'
           }}

@@ -68,17 +68,34 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
   };
 
   return (
-    <div className="rounded-lg overflow-hidden shadow-lg" style={{
+    <div className="rounded-lg overflow-hidden shadow-lg relative" style={{
       background: `linear-gradient(to bottom, var(--${isDebt ? 'debt' : 'equity'}-gradient-start), var(--${isDebt ? 'debt' : 'equity'}-gradient-end))`
     }}>
-      <div className="p-5">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-2xl font-bold text-white">{selection.title}</h2>
-          <span className="px-3 py-1 text-sm rounded-full text-white" style={{
-            backgroundColor: `var(--${isDebt ? 'debt' : 'equity'}-accent-color)`
-          }}>
-            {isDebt ? 'Debt' : 'Equity'}
-          </span>
+      <span className="absolute top-0 right-0 px-3 py-0 text-xs text-white rounded-bl-lg" style={{
+        backgroundColor: `var(--${isDebt ? 'debt' : 'equity'}-accent-color)`,
+        borderTopRightRadius: 'var(--border-radius)'
+      }}>
+        {isDebt ? 'Debt' : 'Equity'}
+      </span>
+
+      <div className="p-2">
+        <div className="flex items-center mb-5">
+          <div className="flex items-center">
+            <Link to={`/lead-investor/${leadInvestor.id}`} className="mr-2">
+              <div className="relative w-10 h-10 flex items-center justify-center rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--card-bg-color)' }}>
+                <img 
+                  src={leadInvestor.photo} 
+                  alt={leadInvestor.name} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/default-avatar.png';
+                  }}
+                />
+              </div>
+            </Link>
+            <h2 className="text-base font-bold text-white">{selection.title}</h2>
+          </div>
         </div>
 
         {isDebt && selection.debtTerms && (
@@ -99,29 +116,10 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
             </div>
           </div>
         )}
-        
-        <div className="mb-5">
-          <h3 className="text-base font-semibold mb-2 text-gray-300">SELECTION LEAD</h3>
-          <Link to={`/lead-investor/${leadInvestor.id}`} className="flex items-center">
-            <img 
-              src={leadInvestor.photo} 
-              alt={leadInvestor.name} 
-              className="w-12 h-12 rounded-full mr-4"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/default-avatar.png';
-              }}
-            />
-            <div>
-              <p className="font-semibold text-white">{leadInvestor.name}</p>
-              <p className="text-sm text-gray-300">{leadInvestor.bio}</p>
-            </div>
-          </Link>
-        </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-2 mb-6">
           {startups.map((startup) => (
-            <Link key={startup.id} to={`/startup/${startup.id}`} className="relative overflow-hidden rounded-lg" style={{ height: '160px' }}>
+            <Link key={startup.id} to={`/startup/${startup.id}`} className="relative overflow-hidden rounded-lg" style={{ height: '100px' }}>
               <img 
                 src={startup.imageUrl} 
                 alt={startup.name} 
@@ -131,10 +129,9 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
                   target.src = '/default-startup.png';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent">
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent">
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <h4 className="font-semibold text-white text-lg mb-1">{startup.name}</h4>
-                  <p className="text-xs text-gray-300 line-clamp-2">{startup.description}</p>
                 </div>
               </div>
             </Link>
@@ -142,29 +139,25 @@ const StartupsSelectionCard: React.FC<StartupsSelectionCardProps> = ({ selection
         </div>
 
         <div className="mb-5">
-          <div className="flex justify-between text-sm mb-2 text-white">
+          <div className="flex justify-between text-sm mb-1 text-white">
+            <span>Raised: ${selection.currentAmount.toLocaleString()}</span>
             <span>Goal: ${selection.goal.toLocaleString()}</span>
-            <span>${selection.currentAmount.toLocaleString()}</span>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-4">
+          <div className="w-full bg-gray-700 rounded-full h-1">
             <div
-              className="h-4 rounded-full"
+              className="h-1 rounded-full"
               style={{ 
                 width: `${progressPercentage}%`,
                 backgroundColor: `var(--${isDebt ? 'debt' : 'equity'}-accent-color)`
               }}
             ></div>
           </div>
-          <div className="flex justify-between text-sm mt-2 text-gray-300">
-            <span>{progressPercentage.toFixed(0)}%</span>
-            <span>{selection.backersCount} BACKERS • {selection.daysLeft} DAYS LEFT</span>
-          </div>
         </div>
 
         <div className="flex gap-2 mb-5">
           <button 
             onClick={handleInvestmentClick}
-            className="flex-1 text-white py-3 rounded-lg font-semibold transition-colors duration-200 text-lg"
+            className="flex-1 text-white py-2 rounded-lg font-semibold transition-colors duration-200 text-lg"
             style={{
               backgroundColor: `var(--${isDebt ? 'debt' : 'equity'}-accent-color)`,
               color: 'var(--button-text-color)',

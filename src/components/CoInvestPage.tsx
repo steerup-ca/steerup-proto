@@ -107,7 +107,7 @@ const CoInvestPage: React.FC = () => {
   const startupGoalAmount = Math.round(selection.goal / numStartups);
 
   return (
-    <div className="container mx-auto px-3 py-1">
+    <div className="container mx-auto px-2 py-1">
       <div className="flex items-center justify-center gap-4 mb-6">
         {leadInvestor && (
           <Link to={`/lead-investor/${leadInvestor.id}`}>
