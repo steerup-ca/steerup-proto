@@ -3,8 +3,6 @@ import { db } from '../firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { StartupsSelection, LeadInvestor, Startup, Campaign, InvestmentType } from '../types';
 import StartupsSelectionCard from './StartupsSelectionCard';
-import { mockSelections, mockLeadInvestors, mockStartups, mockCampaigns } from '../mockData';
-
 
 // Helper function to convert object to array
 const objectToArray = (obj: any) => {
@@ -115,12 +113,12 @@ const ExplorePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-900">
       <div className="container mx-auto px-2">
-        <h1 className="text-3xl font-bold mb-8 text-center text-white">Explore Startups Selections</h1>
+        <h1 className="text-2xl font-bold mb-8 text-center text-white">Explore Startups Selections</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {startupsSelections.length === 0 ? (
-            <p className="col-span-full text-center text-gray-400 bg-gray-800 p-6 rounded-lg shadow-md">No startups selections available.</p>
+            <p className="col-span-f   ull text-center text-gray-400 bg-gray-800 p-6 rounded-lg shadow-md">No startups selections available.</p>
           ) : (
             startupsSelections.map(selection => {
               // Skip if selection doesn't have required data

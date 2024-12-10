@@ -154,6 +154,15 @@ body {
   .navbar a:active, .navbar button:active {
     background-color: rgba(142, 68, 173, 0.1);
   }
+
+  /* Add styles for active nav items */
+  .navbar a.active {
+    color: var(--primary-color);
+  }
+
+  .navbar a.active .material-icons {
+    color: var(--primary-color);
+  }
 }
 
 /* Side Menu Styles */

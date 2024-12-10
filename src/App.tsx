@@ -19,7 +19,7 @@ import ExplorePage from './components/ExplorePage';
 import StartupDetailPage from './components/StartupDetailPage';
 import LeadInvestorDetailPage from './components/LeadInvestorDetailPage';
 import AdditionalFundingDetailPage from './components/AdditionalFundingDetailPage';
-import LandingPage from './components/LandingPage';
+// import LandingPage from './components/LandingPage';
 import CoInvestPage from './components/CoInvestPage';
 import CoLendPage from './components/CoLendPage';
 import ProfilePage from './components/ProfilePage';
@@ -34,8 +34,8 @@ function App() {
       <div className="App">
         <Header />
         <Routes>
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<LandingPage />} />
+          <Route path="/" element={<Navigate to="/explore" replace />} />
+          <Route path="/home" element={<Navigate to="/explore" replace />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/startup/:id" element={<StartupDetailPage />} />

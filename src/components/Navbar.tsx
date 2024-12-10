@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { KYCStatus } from '../types';
 
 interface NavbarProps {
@@ -43,8 +43,8 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
         backgroundColor: 'var(--card-bg-color)',
         boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.2)',
         zIndex: 40,
-        height: '2.8rem', // Reduced from 3.5rem (20% reduction)
-        display: 'none', // Hidden by default, shown via media query
+        height: '2.8rem',
+        display: 'none',
       }} className="mobile-nav">
         <ul style={{
           display: 'flex',
@@ -56,46 +56,46 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
           backgroundColor: 'var(--card-bg-color)'
         }}>
           <li>
-            <Link to="/home" style={{
+            <NavLink to="/home" style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               color: 'var(--text-color)',
               textDecoration: 'none',
-              fontSize: 'calc(var(--font-size-xsmall) * 0.9)', // Reduced font size
-              padding: '0.2rem' // Reduced padding
-            }}>
+              fontSize: 'calc(var(--font-size-xsmall) * 0.9)',
+              padding: '0.2rem'
+            }} className={({ isActive }) => isActive ? 'active' : ''}>
               <span className="material-icons" style={{ fontSize: '1.2rem', marginBottom: '0.1rem' }}>home</span>
               <span>Home</span>
-            </Link>
+            </NavLink>
           </li>
           <li>
-            <Link to="/explore" style={{
+            <NavLink to="/explore" style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               color: 'var(--text-color)',
               textDecoration: 'none',
-              fontSize: 'calc(var(--font-size-xsmall) * 0.9)', // Reduced font size
-              padding: '0.2rem' // Reduced padding
-            }}>
+              fontSize: 'calc(var(--font-size-xsmall) * 0.9)',
+              padding: '0.2rem'
+            }} className={({ isActive }) => isActive ? 'active' : ''}>
               <span className="material-icons" style={{ fontSize: '1.2rem', marginBottom: '0.1rem' }}>explore</span>
               <span>Explore</span>
-            </Link>
+            </NavLink>
           </li>
           <li>
-            <Link to="/pricing" style={{
+            <NavLink to="/pricing" style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               color: 'var(--text-color)',
               textDecoration: 'none',
-              fontSize: 'calc(var(--font-size-xsmall) * 0.9)', // Reduced font size
-              padding: '0.2rem' // Reduced padding
-            }}>
+              fontSize: 'calc(var(--font-size-xsmall) * 0.9)',
+              padding: '0.2rem'
+            }} className={({ isActive }) => isActive ? 'active' : ''}>
               <span className="material-icons" style={{ fontSize: '1.2rem', marginBottom: '0.1rem' }}>payments</span>
               <span>Pricing</span>
-            </Link>
+            </NavLink>
           </li>
           <li>
             <button onClick={toggleSideMenu} style={{
@@ -105,8 +105,8 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
               color: 'var(--text-color)',
               background: 'none',
               border: 'none',
-              fontSize: 'calc(var(--font-size-xsmall) * 0.9)', // Reduced font size
-              padding: '0.2rem' // Reduced padding
+              fontSize: 'calc(var(--font-size-xsmall) * 0.9)',
+              padding: '0.2rem'
             }}>
               <span className="material-icons" style={{ fontSize: '1.2rem', marginBottom: '0.1rem' }}>menu</span>
               <span>Menu</span>
@@ -121,17 +121,17 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
         display: 'none'
       }} className="desktop-nav">
         <ul className="flex items-center h-16 px-4">
-          <li className="mr-6"><Link to="/home" className="text-white">Home</Link></li>
-          <li className="mr-6"><Link to="/explore" className="text-white">Explore</Link></li>
-          <li className="mr-6"><Link to="/pricing" className="text-white">Pricing</Link></li>
-          <li className="mr-6"><Link to="/portfolio" className="text-white">Portfolio</Link></li>
+          <li className="mr-6"><NavLink to="/home" className={({ isActive }) => isActive ? 'text-white active' : 'text-white'}>Home</NavLink></li>
+          <li className="mr-6"><NavLink to="/explore" className={({ isActive }) => isActive ? 'text-white active' : 'text-white'}>Explore</NavLink></li>
+          <li className="mr-6"><NavLink to="/pricing" className={({ isActive }) => isActive ? 'text-white active' : 'text-white'}>Pricing</NavLink></li>
+          <li className="mr-6"><NavLink to="/portfolio" className={({ isActive }) => isActive ? 'text-white active' : 'text-white'}>Portfolio</NavLink></li>
           <li className="mr-6">
             <Link to="/kyc" className="text-white flex items-center">
               KYC
               <span className={`ml-2 w-2 h-2 rounded-full ${getKYCStatusColor()}`} />
             </Link>
           </li>
-          <li className="mr-6"><Link to="/profile" className="text-white">Profile</Link></li>
+          <li className="mr-6"><NavLink to="/profile" className={({ isActive }) => isActive ? 'text-white active' : 'text-white'}>Profile</NavLink></li>
           <li className="relative">
             <button onClick={toggleAdminMenu} className="text-white">Admin</button>
             {isAdminMenuOpen && (
@@ -181,28 +181,28 @@ const Navbar: React.FC<NavbarProps> = ({ kycStatus = KYCStatus.NotVerified }) =>
         </div>
         <ul style={{ padding: '1rem 0' }}>
           <li>
-            <Link to="/profile" style={{
+            <NavLink to="/profile" style={{
               display: 'flex',
               alignItems: 'center',
               padding: '0.75rem 1rem',
               color: 'var(--text-color)',
               textDecoration: 'none'
-            }} onClick={toggleSideMenu}>
+            }} onClick={toggleSideMenu} className={({ isActive }) => isActive ? 'active' : ''}>
               <span className="material-icons" style={{ marginRight: '0.5rem' }}>person</span>
               Profile
-            </Link>
+            </NavLink>
           </li>
           <li>
-            <Link to="/pricing" style={{
+            <NavLink to="/pricing" style={{
               display: 'flex',
               alignItems: 'center',
               padding: '0.75rem 1rem',
               color: 'var(--text-color)',
               textDecoration: 'none'
-            }} onClick={toggleSideMenu}>
+            }} onClick={toggleSideMenu} className={({ isActive }) => isActive ? 'active' : ''}>
               <span className="material-icons" style={{ marginRight: '0.5rem' }}>payments</span>
               Pricing
-            </Link>
+            </NavLink>
           </li>
           <li>
             <Link to="/kyc" style={{
